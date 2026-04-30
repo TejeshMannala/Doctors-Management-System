@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link, useLocation, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Users, Calendar, LogOut, FileText, Bell, Search, Activity, Heart, Shield, Menu, X } from 'lucide-react';
+import { LayoutDashboard, Users, Calendar, LogOut, FileText, Bell, Search, Activity, Heart, Shield, ArrowLeft } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 import ProtectedRoute from './components/ProtectedRoute';
@@ -37,46 +37,41 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
     { name: 'Feedback', path: '/support', icon: <FileText size={20} /> },
   ];
 
-  const sidebarVariants = {
-    open: { x: 0, opacity: 1, transition: { type: 'spring', stiffness: 300, damping: 30 } },
-    closed: { x: '-100%', opacity: 0, transition: { type: 'spring', stiffness: 300, damping: 30 } }
-  };
+  const isHome = location.pathname === '/';
 
   return (
-    <>
-      {/* Overlay for mobile */}
-      <AnimatePresence>
-        {isOpen && (
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={() => setIsOpen(false)}
-            className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-40 lg:hidden"
-          />
-        )}
-      </AnimatePresence>
-
-      <motion.div 
-        variants={sidebarVariants}
-        initial="closed"
-        animate={isOpen ? 'open' : 'closed'}
-        className={`fixed lg:static inset-y-0 left-0 w-[280px] border-r backdrop-blur-xl flex flex-col p-6 z-50 transition-all duration-300 lg:translate-x-0 lg:opacity-100 ${
-          theme === 'dark' ? 'bg-slate-900/90 border-slate-800' : 'bg-white/90 border-slate-200 shadow-2xl lg:shadow-xl'
+      <div 
+        className={`sticky top-0 h-screen w-[260px] min-w-[260px] border-r backdrop-blur-xl flex flex-col p-6 z-50 ${
+          theme === 'dark' ? 'bg-slate-900/90 border-slate-800' : 'bg-white/90 border-slate-200 shadow-xl'
         }`}
       >
-        <div className="flex items-center justify-between mb-12">
-          <div className="flex items-center gap-3">
-            <div className="bg-gradient-to-br from-indigo-500 to-purple-600 p-2.5 rounded-xl shadow-lg shadow-indigo-500/30">
-              <Shield className="text-white" size={24} />
-            </div>
-            <span className="text-xl font-bold bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent tracking-wide">
-              MediAdmin
-            </span>
+        {/* Back Button */}
+        <button
+          onClick={() => navigate(-1)}
+          disabled={isHome}
+          className={`flex items-center gap-2 px-3 py-2 mb-4 rounded-lg text-sm font-medium transition-all duration-200 ${
+            isHome
+              ? theme === 'dark'
+                ? 'text-slate-600 cursor-not-allowed'
+                : 'text-slate-300 cursor-not-allowed'
+              : theme === 'dark'
+                ? 'text-slate-300 hover:bg-slate-800 hover:text-white'
+                : 'text-slate-600 hover:bg-indigo-50 hover:text-indigo-600'
+          }`}
+        >
+          <ArrowLeft size={18} />
+          <span>Back</span>
+        </button>
+
+        <div className="flex items-center gap-3 mb-10">
+          <div className="bg-gradient-to-br from-indigo-500 to-purple-600 p-2.5 rounded-xl shadow-lg shadow-indigo-500/30">
+            <Shield className="text-white" size={24} />
           </div>
-          <button onClick={() => setIsOpen(false)} className="lg:hidden p-2 text-slate-400 hover:text-white">
-            <X size={24} />
-          </button>
+          <span className={`text-xl font-bold bg-gradient-to-r bg-clip-text text-transparent tracking-wide ${
+            theme === 'dark' ? 'from-white to-slate-400' : 'from-indigo-600 to-purple-600'
+          }`}>
+            MediAdmin
+          </span>
         </div>
         
         <div className="flex flex-col gap-2 flex-grow">
@@ -109,8 +104,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
           <LogOut size={20} />
           Logout
         </button>
-      </motion.div>
-    </>
+      </div>
   );
 };
 
@@ -126,17 +120,7 @@ const Header = ({ pendingCount, onMenuClick }) => {
     <div className={`h-20 px-4 md:px-8 flex items-center justify-between border-b backdrop-blur-xl sticky top-0 z-20 transition-all duration-300 ${
       theme === 'dark' ? 'border-slate-800 bg-slate-900/40' : 'border-slate-200 bg-white/60 shadow-sm'
     }`}>
-      <button 
-        onClick={onMenuClick}
-        className={`lg:hidden p-2.5 rounded-xl border transition-all ${
-          theme === 'dark' 
-            ? 'bg-slate-800/50 border-slate-700/50 text-slate-300 hover:bg-slate-700' 
-            : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50 shadow-sm'
-        }`}
-      >
-        <Menu size={24} />
-      </button>
-      
+
       <div className="flex items-center gap-2 md:gap-5 ml-auto">
         <button 
           onClick={toggleTheme}
