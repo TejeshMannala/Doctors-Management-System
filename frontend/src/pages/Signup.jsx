@@ -126,25 +126,25 @@ const Signup = () => {
         <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
           <motion.div variants={itemVariants} className="md:col-span-2">
             <label className="block text-xs font-black uppercase tracking-widest text-slate-400 mb-2 ml-1">{t('Full Name')}</label>
-            <input type="text" name="fullName" value={formData.fullName} onChange={handleChange} placeholder="John Doe" className={`w-full bg-slate-50 border px-6 py-4 rounded-2xl focus:bg-white focus:ring-4 focus:ring-primary-500/10 font-bold outline-none transition-all ${validationErrors.fullName ? 'border-red-500' : 'border-slate-100 focus:border-primary-500'}`} required />
+            <input type="text" name="fullName" value={formData.fullName} onChange={handleChange} placeholder={t('Enter your full name')} className={`w-full bg-slate-50 border px-6 py-4 rounded-2xl focus:bg-white focus:ring-4 focus:ring-primary-500/10 font-bold outline-none transition-all ${validationErrors.fullName ? 'border-red-500' : 'border-slate-100 focus:border-primary-500'}`} required />
             {validationErrors.fullName && <p className="text-red-500 text-xs mt-2 font-bold uppercase">{validationErrors.fullName}</p>}
           </motion.div>
 
           <motion.div variants={itemVariants} className="md:col-span-2">
             <label className="block text-xs font-black uppercase tracking-widest text-slate-400 mb-2 ml-1">{t('Email Address')}</label>
-            <input type="email" name="email" value={formData.email} onChange={handleChange} placeholder="john@example.com" className={`w-full bg-slate-50 border px-6 py-4 rounded-2xl focus:bg-white focus:ring-4 focus:ring-primary-500/10 font-bold outline-none transition-all ${validationErrors.email ? 'border-red-500' : 'border-slate-100 focus:border-primary-500'}`} required />
+            <input type="email" name="email" value={formData.email} onChange={handleChange} placeholder={t('Enter your email address')} className={`w-full bg-slate-50 border px-6 py-4 rounded-2xl focus:bg-white focus:ring-4 focus:ring-primary-500/10 font-bold outline-none transition-all ${validationErrors.email ? 'border-red-500' : 'border-slate-100 focus:border-primary-500'}`} required />
             {validationErrors.email && <p className="text-red-500 text-xs mt-2 font-bold uppercase">{validationErrors.email}</p>}
           </motion.div>
 
           <motion.div variants={itemVariants}>
             <label className="block text-xs font-black uppercase tracking-widest text-slate-400 mb-2 ml-1">{t('Password')}</label>
-            <input type="password" name="password" value={formData.password} onChange={handleChange} placeholder="••••••••" className={`w-full bg-slate-50 border px-6 py-4 rounded-2xl focus:bg-white focus:ring-4 focus:ring-primary-500/10 font-bold outline-none transition-all ${validationErrors.password ? 'border-red-500' : 'border-slate-100 focus:border-primary-500'}`} required />
+            <input type="password" name="password" value={formData.password} onChange={handleChange} placeholder={t('Enter your password')} className={`w-full bg-slate-50 border px-6 py-4 rounded-2xl focus:bg-white focus:ring-4 focus:ring-primary-500/10 font-bold outline-none transition-all ${validationErrors.password ? 'border-red-500' : 'border-slate-100 focus:border-primary-500'}`} required />
             {validationErrors.password && <p className="text-red-500 text-[10px] mt-2 font-bold leading-tight">{validationErrors.password}</p>}
           </motion.div>
 
           <motion.div variants={itemVariants}>
             <label className="block text-xs font-black uppercase tracking-widest text-slate-400 mb-2 ml-1">{t('Confirm Password')}</label>
-            <input type="password" name="confirmPassword" value={formData.confirmPassword} onChange={handleChange} placeholder="••••••••" className={`w-full bg-slate-50 border px-6 py-4 rounded-2xl focus:bg-white focus:ring-4 focus:ring-primary-500/10 font-bold outline-none transition-all ${validationErrors.confirmPassword ? 'border-red-500' : 'border-slate-100 focus:border-primary-500'}`} required />
+            <input type="password" name="confirmPassword" value={formData.confirmPassword} onChange={handleChange} placeholder={t('Confirm your password')} className={`w-full bg-slate-50 border px-6 py-4 rounded-2xl focus:bg-white focus:ring-4 focus:ring-primary-500/10 font-bold outline-none transition-all ${validationErrors.confirmPassword ? 'border-red-500' : 'border-slate-100 focus:border-primary-500'}`} required />
             {validationErrors.confirmPassword && <p className="text-red-500 text-xs mt-2 font-bold uppercase">{validationErrors.confirmPassword}</p>}
           </motion.div>
 

@@ -154,7 +154,7 @@ const Login = () => {
               name="email"
               value={formData.email}
               onChange={handleChange}
-              placeholder="name@example.com"
+              placeholder={t('Enter your email address')}
               className={`w-full bg-slate-50 border px-6 py-5 rounded-2xl text-slate-900 font-medium outline-none transition-all focus:bg-white focus:ring-4 focus:ring-primary-500/10 ${validationErrors.email ? 'border-red-500' : 'border-slate-100 focus:border-primary-500'}`}
               required
             />
@@ -171,7 +171,7 @@ const Login = () => {
               name="password"
               value={formData.password}
               onChange={handleChange}
-              placeholder="••••••••"
+              placeholder={t('Enter your password')}
               className={`w-full bg-slate-50 border px-6 py-5 rounded-2xl text-slate-900 font-medium outline-none transition-all focus:bg-white focus:ring-4 focus:ring-primary-500/10 ${validationErrors.password ? 'border-red-500' : 'border-slate-100 focus:border-primary-500'}`}
               required
             />
