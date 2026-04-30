@@ -1,4 +1,4 @@
-const rawApiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const rawApiUrl = import.meta.env.VITE_API_URL || 'https://backend-ulf8.onrender.com/api';
 
 export const API_URL = rawApiUrl.replace(/\/+$/, '');
 
