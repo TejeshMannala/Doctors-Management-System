@@ -17,7 +17,7 @@ import { ThemeProvider, useTheme } from './utils/ThemeContext';
 import { Moon, Sun } from 'lucide-react';
 import NotFound from './pages/NotFound';
 
-const Sidebar = ({ isOpen, setIsOpen }) => {
+const Sidebar = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { theme } = useTheme();
@@ -81,7 +81,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
               <Link 
                 to={item.path} 
                 key={item.name}
-                onClick={() => setIsOpen(false)}
+                onClick={() => {}}
                 className={`flex items-center gap-3 px-4 py-3.5 rounded-xl font-medium transition-all duration-300 relative overflow-hidden group ${
                   isActive 
                     ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/30' 
@@ -168,7 +168,6 @@ const LayoutContainer = ({ children }) => {
   const [pendingCount, setPendingCount] = useState(0);
   const [showToast, setShowToast] = useState(false);
   const [lastNotificationTime, setLastNotificationTime] = useState(0);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const { theme } = useTheme();
 
   const checkNotifications = useCallback(async () => {
@@ -200,21 +199,6 @@ const LayoutContainer = ({ children }) => {
     return () => clearInterval(interval);
   }, [checkNotifications]);
 
-  // Sync sidebar state with screen size
-  useEffect(() => {
-    const handleResize = () => {
-      if (window.innerWidth >= 1024) {
-        setIsSidebarOpen(true);
-      } else {
-        setIsSidebarOpen(false);
-      }
-    };
-    
-    handleResize();
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
-
   return (
     <div className={`flex h-screen w-full overflow-hidden transition-colors duration-300 ${
       theme === 'dark' ? 'bg-slate-950 text-slate-100' : 'bg-slate-50 text-slate-900'
@@ -225,9 +209,9 @@ const LayoutContainer = ({ children }) => {
         type="notification"
         message={`You have ${pendingCount} pending feedback ticket(s) waiting for response.`}
       />
-      <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <Header pendingCount={pendingCount} onMenuClick={() => setIsSidebarOpen(true)} />
+      <Sidebar />
+      <div className="flex-1 flex flex-col overflow-hidden min-w-0">
+        <Header pendingCount={pendingCount} />
         <main className="flex-1 overflow-y-auto p-4 md:p-8">
           <motion.div
             initial={{ opacity: 0, y: 10 }}
