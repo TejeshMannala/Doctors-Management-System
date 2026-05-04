@@ -11,7 +11,7 @@
 > A full-stack healthcare management web application built with the MERN stack. It provides a patient-facing portal to browse doctors, a feature-rich admin dashboard to manage the entire platform, and a secure RESTful backend API — all protected with JWT authentication and role-based access control.
 
 📂 **GitHub:** [github.com/TejeshMannala/Doctors-Management-System](https://github.com/TejeshMannala/Doctors-Management-System)
- **live demo:**[Doctor Mangement System](https://medicare-n719.onrender.com/)
+ **live demo:**[Doctor Mangement System](https://medicare-n719.onrender.com)
 
 ---
 
