@@ -1,4 +1,4 @@
-# 🏥 Doctors Management System
+# 🏥 MedCare — Doctors Management System
 
 ![MERN Stack](https://img.shields.io/badge/Stack-MERN-brightgreen?style=for-the-badge)
 ![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)
@@ -8,16 +8,17 @@
 ![JWT](https://img.shields.io/badge/JWT-black?style=for-the-badge&logo=JSON%20web%20tokens)
 ![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)
 
-> A full-stack healthcare management web application built with the MERN stack. It provides a patient-facing portal to browse doctors, a feature-rich admin dashboard to manage the entire platform, and a secure RESTful backend API — all protected with JWT authentication and role-based access control.
+> **MedCare** is a full-stack healthcare management web application built with the MERN stack. It provides a patient-facing portal to connect with top doctors, manage prescriptions, and track health journeys — alongside a feature-rich admin dashboard and a secure RESTful backend API protected with JWT authentication and role-based access control.
 
+🔗 **Live Demo:** [medicare-n719.onrender.com](https://medicare-n719.onrender.com)
 📂 **GitHub:** [github.com/TejeshMannala/Doctors-Management-System](https://github.com/TejeshMannala/Doctors-Management-System)
- **live demo:**[Doctor Mangement System](https://medicare-n719.onrender.com)
 
 ---
 
 ## 📌 Table of Contents
 
 - [Overview](#overview)
+- [Interface Screenshots](#interface-screenshots)
 - [Features](#features)
 - [Tech Stack](#tech-stack)
 - [Project Structure](#project-structure)
@@ -30,17 +31,38 @@
 
 ## 🧾 Overview
 
-The **Doctors Management System** is a complete, production-style healthcare platform designed to digitalize the management of doctors, patients, and clinic administration. Instead of relying on paper records or disconnected spreadsheets, this system brings all core operations into one unified, secure web application.
+**MedCare** is a complete, production-style healthcare platform designed to digitalize the management of doctors, patients, and clinic administration. The tagline — *"Your Health, Simplified"* — captures the mission: connect patients with the right doctors, manage prescriptions, and track health journeys in one beautiful platform.
 
-The platform is split into **three independent layers**:
+The system is built across **three independent layers**:
 
 | App | Purpose |
 |-----|---------|
-| `frontend` | Patient portal — browse doctors, manage profile |
+| `frontend` | Patient portal — browse doctors, book appointments, manage prescriptions |
 | `admin` | Admin dashboard — full platform control |
 | `backend` | REST API — shared by both frontends |
 
-This architecture mirrors how real-world healthcare platforms are built — a single trusted backend serving multiple client applications with different access levels.
+---
+
+## 🖥️ Interface Screenshots
+
+### 🏠 Hero — Modern Care for Modern Life
+> Patient portal home page with role-based navbar, language selector, and quick action buttons.
+
+![MedCare Hero](screenshot1.png)
+
+---
+
+### 🩺 Platform Services
+> Eight core healthcare services offered on the platform including Digital Health Records, Home Sample Collection, Medicine Delivery, Emergency Ambulance, Affordable Health Packages, Health Insurance Assistance, Live Bed Availability, and Blood Donor Finder.
+
+![MedCare Services](screenshot2.png)
+
+---
+
+### ⚡ Quick Access — Continue Your Journey
+> Patient dashboard quick-access cards for Explore Doctors, My Appointments, Prescription, Help, and About — each with a direct CTA button.
+
+![MedCare Quick Access](screenshot3.png)
 
 ---
 
@@ -50,13 +72,16 @@ This architecture mirrors how real-world healthcare platforms are built — a si
 - Register and log in securely with JWT
 - Browse the full directory of available doctors
 - Filter doctors by specialization or availability
-- View detailed doctor profiles — qualifications, experience, schedule
-- Manage personal profile and account details
+- Book appointments and track booking ID & status
+- Access and manage prescriptions anytime
+- Digital Health Records — view reports and medical history
+- Quick access dashboard — Explore Doctors, My Appointments, Prescription, Help
+- Multi-language support (English selector in navbar)
 - Fully responsive UI — works on mobile, tablet, and desktop
 
 ### 🛠️ Admin Dashboard (`/admin`)
 - Separate, role-protected admin application
-- Add new doctors with full profile details (name, specialization, qualifications, schedule, contact)
+- Add new doctors with full profile details
 - Edit and update existing doctor records in real time
 - Delete inactive or incorrect doctor profiles
 - View and manage all registered patients
@@ -67,7 +92,7 @@ This architecture mirrors how real-world healthcare platforms are built — a si
 - **JWT Authentication** — stateless, token-based sessions for all users
 - **Role-Based Access Control (RBAC)** — `patient` vs `admin` roles with strictly enforced permissions
 - **Protected API routes** — middleware rejects any request without a valid, role-appropriate token
-- **Secure password handling** — passwords are hashed before storage, never stored in plain text
+- **Secure password handling** — passwords are hashed before storage, never in plain text
 - Environment secrets managed via `.env` — never hardcoded
 
 ---
@@ -83,6 +108,7 @@ This architecture mirrors how real-world healthcare platforms are built — a si
 | **Authentication** | JWT (JSON Web Tokens) |
 | **Architecture** | MVC (Model-View-Controller) |
 | **API Testing** | Postman |
+| **Deployment** | Render |
 | **Version Control** | Git, GitHub |
 
 ---
@@ -92,23 +118,23 @@ This architecture mirrors how real-world healthcare platforms are built — a si
 ```
 Doctors-Management-System/
 │
-├── frontend/                  # Patient-facing React application
+├── frontend/                  # Patient-facing React application (MedCare)
 │   ├── src/
-│   │   ├── components/        # Reusable UI components (Navbar, DoctorCard, etc.)
-│   │   ├── pages/             # Pages (Home, Doctors, Login, Register, Profile)
-│   │   ├── context/ or redux/ # Auth state management
+│   │   ├── components/        # Navbar, DoctorCard, ServiceCard, etc.
+│   │   ├── pages/             # Home, Doctors, Appointments, Prescription, Help, About
+│   │   ├── context/           # Auth state management
 │   │   └── App.jsx
 │   └── package.json
 │
 ├── admin/                     # Admin dashboard React application
 │   ├── src/
 │   │   ├── components/        # Admin UI components
-│   │   ├── pages/             # Pages (Dashboard, Doctors, Patients, Orders)
+│   │   ├── pages/             # Dashboard, Doctors, Patients, Appointments
 │   │   └── App.jsx
 │   └── package.json
 │
 ├── backend/                   # Node.js + Express.js REST API
-│   ├── controllers/           # Business logic (authController, doctorController, etc.)
+│   ├── controllers/           # authController, doctorController, appointmentController
 │   ├── models/                # Mongoose schemas (User, Doctor, Appointment)
 │   ├── routes/                # API route definitions
 │   ├── middleware/            # JWT verification + role-check middleware
@@ -125,12 +151,9 @@ Doctors-Management-System/
 
 ### Prerequisites
 
-Make sure you have the following installed:
 - [Node.js](https://nodejs.org/) v16 or higher
 - [MongoDB](https://www.mongodb.com/) (local or MongoDB Atlas)
 - [Git](https://git-scm.com/)
-
----
 
 ### 1. Clone the Repository
 
@@ -139,24 +162,16 @@ git clone https://github.com/TejeshMannala/Doctors-Management-System.git
 cd Doctors-Management-System
 ```
 
----
-
 ### 2. Setup and Run the Backend
 
 ```bash
 cd backend
 npm install
-```
-
-Create a `.env` file inside `/backend` (see [Environment Variables](#environment-variables) section), then:
-
-```bash
+# Create your .env file (see Environment Variables section)
 npm start
 ```
 
 Backend API runs at → `http://localhost:5000`
-
----
 
 ### 3. Setup and Run the Patient Frontend
 
@@ -166,9 +181,7 @@ npm install
 npm start
 ```
 
-Patient portal runs at → `http://localhost:3000`
-
----
+Patient portal (MedCare) runs at → `http://localhost:3000`
 
 ### 4. Setup and Run the Admin Panel
 
@@ -184,7 +197,7 @@ Admin dashboard runs at → `http://localhost:3001`
 
 ## 🔐 Environment Variables
 
-Create a `.env` file inside the `/backend` folder with the following keys:
+Create a `.env` file inside the `/backend` folder:
 
 ```env
 PORT=5000
@@ -234,7 +247,7 @@ JWT_EXPIRES_IN=7d
 | GET | `/` | Get all appointments | Admin only |
 | PUT | `/:id/status` | Update appointment status | Admin only |
 
-> 🔒 All protected routes require the header: `Authorization: Bearer <your_token>`
+> 🔒 All protected routes require: `Authorization: Bearer <your_token>`
 
 ---
 
@@ -244,11 +257,11 @@ JWT_EXPIRES_IN=7d
 1. User submits credentials → backend validates → issues a signed JWT token
 2. Token is stored on the client and sent with every subsequent protected request
 3. Backend middleware verifies the token's signature and expiry on each request
-4. If invalid or expired, the request is rejected with a `401 Unauthorized` response
+4. If invalid or expired → request is rejected with `401 Unauthorized`
 
 ### Role-Based Access Control
 ```
-Role: "patient"  →  Can: browse doctors, book appointments, manage own profile
+Role: "patient"  →  Can: browse doctors, book appointments, access prescriptions
 Role: "admin"    →  Can: everything above + add/edit/delete doctors, manage all users
 ```
 
@@ -279,4 +292,4 @@ This project is open source and available under the [MIT License](LICENSE).
 
 ---
 
-> 💡 Built with ❤️ using the MERN Stack — bringing digital efficiency to healthcare management.
+> 💡 Built with ❤️ using the MERN Stack — **MedCare**: *Your Health, Simplified.*
