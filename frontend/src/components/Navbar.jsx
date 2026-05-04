@@ -35,18 +35,7 @@ const Navbar = () => {
     };
   }, [mobileOpen]);
 
-  const patientLinks = [{ to: '/', label: t('Home') }];
-  const doctorLinks = [{ to: '/', label: t('Home') }];
-  const guestLinks = [{ to: '/', label: t('Home') }];
-
-  const roleLinks = user?.role === 'patient' ? patientLinks : user?.role === 'doctor' ? doctorLinks : [{ to: '/', label: t('Home') }];
-
-  const utilityLinks = user
-    ? [
-        { to: '/help', label: t('Help') },
-        { to: '/about', label: t('About') },
-      ]
-    : guestLinks;
+  const navLinks = [{ to: '/', label: t('Home') }];
 
   const handleLogout = () => {
     logout();
@@ -84,15 +73,10 @@ const Navbar = () => {
 
         {/* Desktop Links */}
         <div className="hidden items-center gap-1 lg:flex bg-slate-200/40 p-1.5 rounded-full backdrop-blur-sm">
-          {roleLinks.map((item) => (
+          {navLinks.map((item) => (
             <Link key={item.to} to={item.to} className={navLinkClass(item.to)}>
               {item.label}
             </Link>
-          ))}
-          {utilityLinks.map((item) => (
-             <Link key={item.to} to={item.to} className={navLinkClass(item.to)}>
-               {item.label}
-             </Link>
           ))}
         </div>
 
@@ -171,7 +155,7 @@ const Navbar = () => {
                 </div>
 
                 <nav className="flex flex-col gap-3">
-                  {[...roleLinks, ...utilityLinks].map((item, idx) => (
+                  {navLinks.map((item, idx) => (
                     <motion.div
                       key={item.to}
                       initial={{ opacity: 0, x: 20 }}
