@@ -20,17 +20,33 @@ const startServer = async (port = PORT) => {
 
     const adminDist = path.join(__dirname, '../admin/dist');
     const frontendDist = path.join(__dirname, '../frontend/dist');
-    app.use('/admin', express.static(adminDist));
 
+    // Static files
+    app.use('/admin', express.static(adminDist));
     app.use(express.static(frontendDist));
 
+    // Favicon handler to prevent 404
+    app.get('/favicon.ico', (req, res) => {
+      res.status(204).end();
+    });
+
+    // SPA Routing
     app.get('*', (req, res) => {
+      // If it's an API route that wasn't matched, return 404
+      if (req.path.startsWith('/api')) {
+        return res.status(404).json({
+          success: false,
+          message: 'API route not found'
+        });
+      }
+      
+      // For Admin SPA
       if (req.path.startsWith('/admin')) {
         return res.sendFile(path.join(adminDist, 'index.html'));
       }
-      if (!req.path.startsWith('/api')) {
-        res.sendFile(path.join(frontendDist, 'index.html'));
-      }
+      
+      // For Main Frontend SPA
+      res.sendFile(path.join(frontendDist, 'index.html'));
     });
 
     const server = app.listen(port, () => {
@@ -42,7 +58,6 @@ const startServer = async (port = PORT) => {
     server.on('error', (error) => {
       if (error.code === 'EADDRINUSE') {
         console.error(`\nPort ${port} is already in use.`);
-        console.error('Stop the process using this port or set a different PORT in .env.');
         process.exit(1);
       }
       console.error('Server encountered an error:', error);
