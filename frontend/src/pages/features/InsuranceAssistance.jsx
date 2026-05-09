@@ -301,7 +301,7 @@ const InsuranceAssistance = () => {
         />
       </div>
 
-      <div className="relative z-10 mx-auto max-w-7xl px-4 py-8">
+      <div className="relative z-10 mx-auto max-w-6xl px-4 py-5 sm:px-5 md:py-7">
         <BackButton />
 
         <AnimatePresence>
@@ -321,7 +321,7 @@ const InsuranceAssistance = () => {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="relative mt-6 overflow-hidden rounded-3xl bg-gradient-to-br from-blue-600 via-indigo-600 to-cyan-700 p-8 text-white"
+          className="relative mt-5 overflow-hidden rounded-3xl bg-gradient-to-br from-blue-600 via-indigo-600 to-cyan-700 p-5 text-white md:p-6"
         >
           <div className="absolute right-0 top-0 h-64 w-64 translate-x-1/2 -translate-y-1/2 rounded-full bg-white/10 blur-3xl" />
           <div className="absolute bottom-0 left-0 h-48 w-48 -translate-x-1/2 translate-y-1/2 rounded-full bg-cyan-400/20 blur-3xl" />
@@ -332,7 +332,7 @@ const InsuranceAssistance = () => {
                 <Shield className="h-8 w-8" />
               </div>
               <div>
-                <h1 className="text-3xl font-black md:text-4xl">{t('Health Insurance Assistance')}</h1>
+                <h1 className="text-2xl font-black md:text-3xl">{t('Health Insurance Assistance')}</h1>
                 <p className="text-blue-100">
                   {t('Understand coverage, compare providers, and file claims with confidence')}
                 </p>
@@ -345,10 +345,10 @@ const InsuranceAssistance = () => {
               )}
             </p>
 
-            <div className="mt-6 flex flex-wrap gap-4">
+            <div className="mt-5 grid gap-3 sm:grid-cols-3">
               <button
                 onClick={() => setActiveTab('coverage')}
-                className={`rounded-xl px-6 py-3 font-semibold transition-all ${
+                className={`rounded-xl px-4 py-3 text-sm font-semibold transition-all sm:px-5 ${
                   activeTab === 'coverage' ? 'bg-white text-blue-600' : 'bg-white/10 text-white hover:bg-white/20'
                 }`}
               >
@@ -356,7 +356,7 @@ const InsuranceAssistance = () => {
               </button>
               <button
                 onClick={() => setActiveTab('claims')}
-                className={`rounded-xl px-6 py-3 font-semibold transition-all ${
+                className={`rounded-xl px-4 py-3 text-sm font-semibold transition-all sm:px-5 ${
                   activeTab === 'claims' ? 'bg-white text-blue-600' : 'bg-white/10 text-white hover:bg-white/20'
                 }`}
               >
@@ -364,7 +364,7 @@ const InsuranceAssistance = () => {
               </button>
               <button
                 onClick={() => setActiveTab('policies')}
-                className={`rounded-xl px-6 py-3 font-semibold transition-all ${
+                className={`rounded-xl px-4 py-3 text-sm font-semibold transition-all sm:px-5 ${
                   activeTab === 'policies' ? 'bg-white text-blue-600' : 'bg-white/10 text-white hover:bg-white/20'
                 }`}
               >
@@ -378,27 +378,27 @@ const InsuranceAssistance = () => {
           variants={container}
           initial="hidden"
           animate="visible"
-          className="mt-8 grid gap-8 xl:grid-cols-[1.75fr_1fr]"
+          className="mt-6 grid gap-6 xl:grid-cols-[1.6fr_1fr]"
         >
           <div className="space-y-8">
             {activeTab === 'coverage' && (
               <motion.div variants={fadeUp} className="space-y-8">
-                <div className="rounded-3xl border border-white/50 bg-white/80 p-6 shadow-lg backdrop-blur-md">
-                  <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                <div className="rounded-3xl border border-white/50 bg-white/80 p-4 shadow-lg backdrop-blur-md md:p-5">
+                  <div className="mb-5 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                     <h2 className="text-2xl font-black text-slate-900">{t('Insurance Providers')}</h2>
-                    <div className="relative">
+                    <div className="relative w-full lg:max-w-sm">
                       <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
                       <input
                         type="text"
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         placeholder={t('Search providers, claim type, or help topic...')}
-                        className="rounded-xl border border-slate-200 bg-slate-50 py-3 pl-12 pr-4 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                        className="w-full rounded-xl border border-slate-200 bg-slate-50 py-3 pl-12 pr-4 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
                       />
                     </div>
                   </div>
 
-                  <div className="grid gap-4 md:grid-cols-2">
+                  <div className="grid gap-4 lg:grid-cols-2">
                     {filteredProviders.map((provider) => (
                       <motion.button
                         key={provider.id}
@@ -406,7 +406,7 @@ const InsuranceAssistance = () => {
                         variants={fadeUp}
                         whileHover={{ y: -4 }}
                         onClick={() => setSelectedProvider(provider)}
-                        className="rounded-2xl border border-slate-100 bg-slate-50 p-6 text-left transition-all hover:border-blue-200 hover:shadow-lg"
+                        className="rounded-2xl border border-slate-100 bg-slate-50 p-4 text-left transition-all hover:border-blue-200 hover:shadow-lg md:p-5"
                       >
                         <div className="flex items-start justify-between gap-4">
                           <div className="flex items-center gap-4">
@@ -442,7 +442,7 @@ const InsuranceAssistance = () => {
                   )}
                 </div>
 
-                <div className="rounded-3xl border border-white/50 bg-white/80 p-6 shadow-lg backdrop-blur-md">
+                <div className="rounded-3xl border border-white/50 bg-white/80 p-4 shadow-lg backdrop-blur-md md:p-5">
                   <div className="mb-6 flex items-center gap-3">
                     <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-violet-100 text-violet-600">
                       <CircleHelp className="h-6 w-6" />
@@ -455,7 +455,7 @@ const InsuranceAssistance = () => {
                     </div>
                   </div>
 
-                  <div className="grid gap-4 md:grid-cols-2">
+                  <div className="grid gap-4 lg:grid-cols-2">
                     {claimGuideSteps.map((step, index) => (
                       <div key={step.title} className="rounded-2xl border border-slate-100 bg-slate-50 p-5">
                         <div className="mb-3 flex items-center gap-3">
@@ -474,7 +474,7 @@ const InsuranceAssistance = () => {
 
             {activeTab === 'claims' && (
               <motion.div variants={fadeUp} className="space-y-8">
-                <div className="rounded-3xl border border-white/50 bg-white/80 p-6 shadow-lg backdrop-blur-md">
+                <div className="rounded-3xl border border-white/50 bg-white/80 p-4 shadow-lg backdrop-blur-md md:p-5">
                   <h2 className="mb-6 text-2xl font-black text-slate-900">{t('Recent Claims')}</h2>
 
                   <div className="space-y-4">
@@ -523,7 +523,7 @@ const InsuranceAssistance = () => {
                   </button>
                 </div>
 
-                <div className="rounded-3xl border border-white/50 bg-white/80 p-6 shadow-lg backdrop-blur-md">
+                <div className="rounded-3xl border border-white/50 bg-white/80 p-4 shadow-lg backdrop-blur-md md:p-5">
                   <h2 className="mb-5 text-2xl font-black text-slate-900">{t('Common Claim Mistakes')}</h2>
                   <div className="grid gap-4 md:grid-cols-2">
                     {[
@@ -543,7 +543,7 @@ const InsuranceAssistance = () => {
             )}
 
             {activeTab === 'policies' && (
-              <motion.div variants={fadeUp} className="rounded-3xl border border-white/50 bg-white/80 p-6 shadow-lg backdrop-blur-md">
+              <motion.div variants={fadeUp} className="rounded-3xl border border-white/50 bg-white/80 p-4 shadow-lg backdrop-blur-md md:p-5">
                 <div className="mb-6 flex items-center justify-between gap-4">
                   <h2 className="text-2xl font-black text-slate-900">{t('My Policy Notes')}</h2>
                   <button
@@ -618,7 +618,7 @@ const InsuranceAssistance = () => {
           </div>
 
           <div className="space-y-8">
-            <motion.div variants={fadeUp} className="rounded-3xl border border-white/50 bg-white/80 p-6 shadow-lg backdrop-blur-md">
+            <motion.div variants={fadeUp} className="rounded-3xl border border-white/50 bg-white/80 p-4 shadow-lg backdrop-blur-md md:p-5">
               <div className="mb-5 flex items-center gap-3">
                 <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-600">
                   <Landmark className="h-6 w-6" />
@@ -647,7 +647,7 @@ const InsuranceAssistance = () => {
               </div>
             </motion.div>
 
-            <motion.div variants={fadeUp} className="rounded-3xl border border-white/50 bg-white/80 p-6 shadow-lg backdrop-blur-md">
+            <motion.div variants={fadeUp} className="rounded-3xl border border-white/50 bg-white/80 p-4 shadow-lg backdrop-blur-md md:p-5">
               <h2 className="mb-5 text-xl font-black text-slate-900">{t('What is Useful Before Claiming?')}</h2>
               <div className="space-y-3">
                 {smartTips.map((tip) => (
@@ -659,7 +659,7 @@ const InsuranceAssistance = () => {
               </div>
             </motion.div>
 
-            <motion.div variants={fadeUp} className="rounded-3xl border border-white/50 bg-white/80 p-6 shadow-lg backdrop-blur-md">
+            <motion.div variants={fadeUp} className="rounded-3xl border border-white/50 bg-white/80 p-4 shadow-lg backdrop-blur-md md:p-5">
               <h2 className="mb-5 text-xl font-black text-slate-900">{t('Quick Help')}</h2>
               <div className="space-y-3 text-sm text-slate-600">
                 <div className="flex items-start gap-3 rounded-2xl bg-slate-50 p-4">
@@ -692,7 +692,7 @@ const InsuranceAssistance = () => {
                 initial={{ opacity: 0, scale: 0.9, y: 20 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                className="w-full max-w-lg overflow-hidden rounded-3xl bg-white shadow-2xl"
+                className="max-h-[85vh] w-full max-w-lg overflow-y-auto rounded-3xl bg-white shadow-2xl"
                 onClick={(e) => e.stopPropagation()}
               >
                 <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-6 text-white">
@@ -808,16 +808,16 @@ const InsuranceAssistance = () => {
                 initial={{ opacity: 0, scale: 0.96, y: 20 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.96, y: 20 }}
-                className="w-full max-w-3xl overflow-hidden rounded-3xl bg-white shadow-2xl"
+                className="max-h-[85vh] w-full max-w-xs overflow-y-auto rounded-3xl bg-white shadow-2xl sm:max-w-xl lg:max-w-2xl"
                 onClick={(e) => e.stopPropagation()}
               >
-                <div className="bg-gradient-to-r from-slate-900 to-blue-900 p-6 text-white">
+                <div className="bg-gradient-to-r from-slate-900 to-blue-900 p-4 text-white sm:p-5">
                   <div className="flex items-start justify-between gap-4">
                     <div>
                       <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-white/15 text-sm font-black">
                         {selectedProvider.icon}
                       </div>
-                      <h2 className="text-2xl font-black">{selectedProvider.name}</h2>
+                      <h2 className="text-xl font-black sm:text-2xl">{selectedProvider.name}</h2>
                       <p className="mt-1 text-sm text-blue-100">{selectedProvider.guidance}</p>
                     </div>
                     <button onClick={() => setSelectedProvider(null)} className="rounded-xl p-2 hover:bg-white/10">
@@ -826,7 +826,7 @@ const InsuranceAssistance = () => {
                   </div>
                 </div>
 
-                <div className="grid gap-6 p-6 md:grid-cols-2">
+                <div className="grid gap-4 p-4 sm:p-5 lg:grid-cols-2">
                   <div className="space-y-4">
                     <div className="rounded-2xl bg-slate-50 p-4">
                       <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Coverage</p>
@@ -873,9 +873,9 @@ const InsuranceAssistance = () => {
                     </div>
                   </div>
 
-                  <div className="md:col-span-2 rounded-2xl bg-blue-50 p-5">
+                  <div className="rounded-2xl bg-blue-50 p-4 lg:col-span-2">
                     <p className="mb-3 text-sm font-bold text-blue-900">Documents usually needed</p>
-                    <div className="grid gap-3 md:grid-cols-2">
+                    <div className="grid gap-3 sm:grid-cols-2">
                       {selectedProvider.documents.map((doc) => (
                         <div key={doc} className="flex items-start gap-2 rounded-xl bg-white p-3 text-sm text-slate-700">
                           <CheckCircle className="mt-0.5 h-4 w-4 flex-shrink-0 text-emerald-600" />
@@ -901,13 +901,13 @@ const InsuranceAssistance = () => {
                 initial={{ opacity: 0, scale: 0.96, y: 20 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.96, y: 20 }}
-                className="w-full max-w-2xl overflow-hidden rounded-3xl bg-white shadow-2xl"
+                className="max-h-[85vh] w-full max-w-xs overflow-y-auto rounded-3xl bg-white shadow-2xl sm:max-w-lg lg:max-w-xl"
                 onClick={(e) => e.stopPropagation()}
               >
-                <div className="bg-gradient-to-r from-blue-600 to-indigo-700 p-6 text-white">
+                <div className="bg-gradient-to-r from-blue-600 to-indigo-700 p-4 text-white sm:p-5">
                   <div className="flex items-center justify-between">
                     <div>
-                      <h2 className="text-2xl font-black">{t('How to Claim Insurance')}</h2>
+                      <h2 className="text-xl font-black sm:text-2xl">{t('How to Claim Insurance')}</h2>
                       <p className="mt-1 text-sm text-blue-100">
                         {t('A simple explanation for users who are new to insurance claims')}
                       </p>
@@ -918,7 +918,7 @@ const InsuranceAssistance = () => {
                   </div>
                 </div>
 
-                <div className="space-y-4 p-6">
+                <div className="space-y-4 p-4 sm:p-5">
                   {claimGuideSteps.map((step, index) => (
                     <div key={step.title} className="rounded-2xl bg-slate-50 p-4">
                       <p className="font-bold text-slate-900">

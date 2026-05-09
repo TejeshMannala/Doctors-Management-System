@@ -216,7 +216,7 @@ const ExploreDoctors = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 py-8">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 py-5 md:py-7">
       {/* Background Effects */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
         <motion.div 
@@ -231,7 +231,7 @@ const ExploreDoctors = () => {
         />
       </div>
 
-      <div className="mx-auto max-w-7xl px-4 relative z-10">
+      <div className="relative z-10 mx-auto max-w-6xl px-4 sm:px-5">
         <BackButton />
 
         {/* Error Display */}
@@ -250,7 +250,7 @@ const ExploreDoctors = () => {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mt-6 rounded-3xl bg-white/80 backdrop-blur-md p-8 shadow-lg shadow-slate-200/50 border border-white/50"
+          className="mt-5 rounded-3xl border border-white/50 bg-white/80 p-5 shadow-lg shadow-slate-200/50 backdrop-blur-md md:p-6"
         >
           <div className="flex items-center gap-3 mb-2">
             <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center">
@@ -258,7 +258,7 @@ const ExploreDoctors = () => {
             </div>
             <span className="text-sm font-semibold text-blue-600">🏥 {t('Find Your Doctor')}</span>
           </div>
-          <h1 className="text-3xl md:text-4xl font-black text-slate-900 mb-2">{t('Explore Doctors')}</h1>
+          <h1 className="mb-2 text-2xl font-black text-slate-900 md:text-3xl">{t('Explore Doctors')}</h1>
           <p className="text-slate-600">{t('Find the best doctor for your needs')}</p>
         </motion.div>
 
@@ -267,7 +267,7 @@ const ExploreDoctors = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="mt-8 rounded-3xl bg-white/80 backdrop-blur-md p-6 shadow-lg shadow-slate-200/50 border border-white/50"
+          className="mt-6 rounded-3xl border border-white/50 bg-white/80 p-4 shadow-lg shadow-slate-200/50 backdrop-blur-md md:p-5"
         >
           <button
             onClick={() => setShowFilters(!showFilters)}
@@ -360,7 +360,7 @@ const ExploreDoctors = () => {
             <motion.div 
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="rounded-3xl bg-white/80 backdrop-blur-md p-12 text-center shadow-lg border border-white/50"
+              className="rounded-3xl border border-white/50 bg-white/80 p-8 text-center shadow-lg md:p-10"
             >
               <div className="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Search className="w-10 h-10 text-slate-400" />
@@ -381,16 +381,16 @@ const ExploreDoctors = () => {
               variants={container}
               initial="hidden"
               animate="visible"
-              className="grid gap-6 md:grid-cols-2 lg:grid-cols-3"
+              className="grid gap-5 md:grid-cols-2 lg:grid-cols-3"
             >
               {filteredDoctors.map((doctor, index) => (
                 <motion.div
                   key={doctor._id}
                   variants={fadeUp}
                   whileHover={{ y: -8 }}
-                  className="group bg-white/80 backdrop-blur-md rounded-3xl border border-white/50 shadow-lg shadow-slate-200/50 overflow-hidden hover:shadow-2xl hover:shadow-blue-500/10 transition-all"
+                  className="group overflow-hidden rounded-3xl border border-white/50 bg-white/80 shadow-lg shadow-slate-200/50 transition-all hover:shadow-2xl hover:shadow-blue-500/10"
                 >
-                  <div className="relative w-full h-56 bg-gray-200 overflow-hidden">
+                  <div className="relative h-52 w-full overflow-hidden bg-gray-200">
                     <img
                       src={doctor.userId?.profileImage || getSpecializationImage(doctor.specialization)}
                       alt={doctor.userId?.fullName || 'Doctor'}
@@ -408,7 +408,7 @@ const ExploreDoctors = () => {
                     )}
                   </div>
 
-                  <div className="p-4">
+                  <div className="p-4 md:p-5">
                     <div className="mb-3">
                       <h3 className="text-lg font-black text-slate-900 mb-1">{doctor.userId?.fullName || 'Doctor'}</h3>
                       <p className="text-blue-600 font-semibold text-sm">{doctor.specialization}</p>
@@ -429,16 +429,16 @@ const ExploreDoctors = () => {
                       {doctor.bio || t('Experienced healthcare professional dedicated to patient care.')}
                     </p>
 
-                    <div className="flex gap-2">
+                    <div className="flex flex-col gap-2 sm:flex-row">
                       <button 
                         onClick={() => setSelectedDoctor(doctor)}
-                        className="flex-1 py-2 px-3 bg-slate-100 text-slate-700 font-semibold rounded-xl hover:bg-slate-200 transition-colors text-sm"
+                        className="flex-1 rounded-xl bg-slate-100 px-3 py-2 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-200"
                       >
                         {t('View Details')}
                       </button>
                       <button 
                         onClick={() => handleBookNow(doctor._id)}
-                        className="flex-1 py-2 px-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold rounded-xl hover:shadow-lg hover:shadow-blue-500/25 transition-all text-sm"
+                        className="flex-1 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 px-3 py-2 text-sm font-semibold text-white transition-all hover:shadow-lg hover:shadow-blue-500/25"
                       >
                         {t('Book Now')}
                       </button>
@@ -464,10 +464,10 @@ const ExploreDoctors = () => {
                 initial={{ opacity: 0, scale: 0.9, y: 20 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                className="relative max-h-[90vh] w-full max-w-sm sm:max-w-md mx-4 overflow-y-auto bg-white rounded-2xl shadow-2xl"
+                className="relative mx-2 max-h-[85vh] w-full max-w-xs overflow-y-auto rounded-2xl bg-white shadow-2xl sm:mx-4 sm:max-w-lg lg:max-w-2xl"
                 onClick={(e) => e.stopPropagation()}
               >
-                <div className="relative w-full h-56 sm:h-64 md:h-72 bg-gray-200 overflow-hidden rounded-t-2xl">
+                <div className="relative h-44 w-full overflow-hidden rounded-t-2xl bg-gray-200 sm:h-56 lg:h-64">
                   <img
                     src={selectedDoctor.userId?.profileImage || getSpecializationImage(selectedDoctor.specialization)}
                     alt={selectedDoctor.userId?.fullName || 'Doctor'}
@@ -493,13 +493,13 @@ const ExploreDoctors = () => {
                     <X className="w-4 h-4" />
                   </button>
                   <div className="absolute bottom-3 left-4 right-4">
-                    <h2 className="text-xl font-black text-white drop-shadow-lg">{selectedDoctor.userId?.fullName || selectedDoctor.name || 'Doctor'}</h2>
+                    <h2 className="text-lg font-black text-white drop-shadow-lg sm:text-xl">{selectedDoctor.userId?.fullName || selectedDoctor.name || 'Doctor'}</h2>
                     <p className="text-blue-200 text-sm font-medium">{selectedDoctor.specialization}</p>
                   </div>
                 </div>
 
-                <div className="p-4">
-                  <div className="flex items-center justify-between mb-3">
+                <div className="p-4 sm:p-5">
+                  <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
                     <div className="flex items-center gap-2">
                       <div className="px-3 py-1 bg-amber-100 rounded-full flex items-center gap-1">
                         <Star className="w-3 h-3 text-amber-600 fill-amber-600" />
@@ -511,7 +511,7 @@ const ExploreDoctors = () => {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-2 mb-3">
+                  <div className="mb-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
                     <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-3 rounded-xl border border-blue-100">
                       <div className="flex items-center gap-2 mb-1">
                         <Award className="w-3 h-3 text-blue-600" />
@@ -528,7 +528,7 @@ const ExploreDoctors = () => {
                     </div>
                   </div>
 
-                  <div className="space-y-2 mb-3">
+                  <div className="mb-4 space-y-2">
                     <div className="bg-slate-50 p-2 rounded-lg border border-slate-100">
                       <p className="text-xs font-bold text-slate-500 uppercase mb-1">Qualification</p>
                       <p className="font-semibold text-slate-900 text-sm">{selectedDoctor.qualification || 'Not specified'}</p>
@@ -557,7 +557,7 @@ const ExploreDoctors = () => {
                       setSelectedDoctor(null);
                       handleBookNow(selectedDoctor._id);
                     }}
-                    className="w-full py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold rounded-xl hover:shadow-lg hover:shadow-blue-500/25 transition-all"
+                    className="w-full rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 py-3 text-sm font-bold text-white transition-all hover:shadow-lg hover:shadow-blue-500/25 sm:text-base"
                   >
                     {t('Book Now')}
                   </button>
