@@ -1,3 +1,4 @@
+const express = require('express');
 const app = require('./app');
 const connectDB = require('./config/db');
 const ensureAdminAccount = require('./utils/ensureAdminAccount');
