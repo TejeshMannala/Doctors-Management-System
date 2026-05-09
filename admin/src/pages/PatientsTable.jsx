@@ -25,7 +25,7 @@ const PatientsTable = () => {
       if (error.response?.status === 401) {
         localStorage.removeItem('adminToken');
         localStorage.removeItem('adminInfo');
-        window.location.href = '/login';
+        window.location.replace('/#/login');
       }
     } finally {
       setLoading(false);
