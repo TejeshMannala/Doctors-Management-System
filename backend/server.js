@@ -1,6 +1,7 @@
 const app = require('./app');
 const connectDB = require('./config/db');
 const ensureAdminAccount = require('./utils/ensureAdminAccount');
+const path = require('path');
 
 require('dotenv').config();
 if (!process.env.JWT_SECRET) {
@@ -13,9 +14,23 @@ const PORT = parseInt(process.env.PORT, 10) || 5000;
 
 const startServer = async (port = PORT) => {
   try {
-    // Connect to MongoDB
     await connectDB();
     await ensureAdminAccount();
+
+    const adminDist = path.join(__dirname, '../admin/dist');
+    const frontendDist = path.join(__dirname, '../frontend/dist');
+    app.use('/admin', express.static(adminDist));
+
+    app.use(express.static(frontendDist));
+
+    app.get('*', (req, res) => {
+      if (req.path.startsWith('/admin')) {
+        return res.sendFile(path.join(adminDist, 'index.html'));
+      }
+      if (!req.path.startsWith('/api')) {
+        res.sendFile(path.join(frontendDist, 'index.html'));
+      }
+    });
 
     const server = app.listen(port, () => {
       console.log(`\n🚀 Server is running on http://localhost:${port}`);
