@@ -6,16 +6,19 @@ const prescriptionSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Appointment',
       required: true,
+      index: true,
     },
     patientId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
       required: true,
+      index: true,
     },
     doctorId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Doctor',
       required: true,
+      index: true,
     },
     diagnosis: {
       disease: String,
@@ -51,5 +54,9 @@ const prescriptionSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+// Compound indexes for common queries
+prescriptionSchema.index({ patientId: 1, issuedAt: -1 });
+prescriptionSchema.index({ doctorId: 1, issuedAt: -1 });
 
 module.exports = mongoose.model('Prescription', prescriptionSchema);

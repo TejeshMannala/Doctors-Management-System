@@ -11,6 +11,7 @@ const doctorSchema = new mongoose.Schema(
     specialization: {
       type: String,
       required: true,
+      index: true,
     },
     experience: {
       type: Number,
@@ -32,12 +33,14 @@ const doctorSchema = new mongoose.Schema(
     consultationFee: {
       type: Number,
       default: 500,
+      index: true,
     },
     rating: {
       type: Number,
       default: 0,
       min: 0,
       max: 5,
+      index: true,
     },
     availableSlots: [
       {
@@ -50,6 +53,7 @@ const doctorSchema = new mongoose.Schema(
     isAvailable: {
       type: Boolean,
       default: true,
+      index: true,
     },
     createdAt: {
       type: Date,
@@ -58,5 +62,9 @@ const doctorSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+// Compound indexes for common queries
+doctorSchema.index({ specialization: 1, isAvailable: 1 });
+doctorSchema.index({ rating: -1 });
 
 module.exports = mongoose.model('Doctor', doctorSchema);

@@ -183,19 +183,24 @@ const BookAppointment = () => {
         doctorId,
         date,
         timeSlot,
-        symptoms: {
-          description: problemDescription,
-          selectedSymptoms,
-          duration,
-          severity,
-          medications,
-          allergies
-        },
-        patientId: user._id,
+        consultationType: 'online',
         patientDetails: {
+          fullName: user?.fullName || '',
           age: parseInt(age),
           gender,
-          mobileNumber
+          mobileNumber,
+          email: user?.email || ''
+        },
+        healthInfo: {
+          problemDescription,
+          symptoms: selectedSymptoms,
+          duration,
+          severity,
+          medicalHistory: {
+            hasHistory: false,
+            details: ''
+          },
+          currentMedications: medications || ''
         }
       };
 

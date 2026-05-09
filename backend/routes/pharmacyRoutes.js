@@ -7,7 +7,7 @@ const {
   createPharmacy,
   updatePharmacy,
 } = require('../controllers/pharmacyController');
-const { authMiddleware } = require('../middleware/authMiddleware');
+const { authMiddleware, authorize } = require('../middleware/authMiddleware');
 
 const router = express.Router();
 
@@ -15,12 +15,12 @@ const router = express.Router();
 router.get('/', getAllPharmacies);
 router.get('/:id', getPharmacyById);
 
-// Patient routes
+// Protected routes - authenticated users
 router.post('/check-availability', authMiddleware, checkMedicineAvailability);
-router.post('/nearby', getNearbyPharmacies);
+router.post('/nearby', authMiddleware, getNearbyPharmacies);
 
-// Admin routes
-router.post('/', authMiddleware, createPharmacy);
-router.put('/:id', authMiddleware, updatePharmacy);
+// Admin only routes
+router.post('/', authMiddleware, authorize(['admin']), createPharmacy);
+router.put('/:id', authMiddleware, authorize(['admin']), updatePharmacy);
 
 module.exports = router;

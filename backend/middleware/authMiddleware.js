@@ -1,6 +1,14 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 
+const getJwtSecret = () => {
+  const secret = process.env.JWT_SECRET;
+  if (!secret) {
+    throw new Error('JWT_SECRET is not defined in environment variables. Please set it in your .env file.');
+  }
+  return secret;
+};
+
 const authMiddleware = async (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
@@ -14,7 +22,7 @@ const authMiddleware = async (req, res, next) => {
       });
     }
 
-    const secret = (process.env.JWT_SECRET || 'your_secret_key').trim();
+    const secret = getJwtSecret();
     const decoded = jwt.verify(token, secret);
     const user = await User.findById(decoded.id);
 

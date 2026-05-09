@@ -6,11 +6,13 @@ const appointmentSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
       required: true,
+      index: true,
     },
     doctorId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Doctor',
       required: true,
+      index: true,
     },
     date: {
       type: Date,
@@ -24,6 +26,7 @@ const appointmentSchema = new mongoose.Schema(
       type: String,
       enum: ['pending', 'confirmed', 'completed', 'cancelled'],
       default: 'pending',
+      index: true,
     },
     // Patient Details
     patientDetails: {
@@ -109,5 +112,10 @@ const appointmentSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+// Compound indexes for common queries
+appointmentSchema.index({ patientId: 1, status: 1 });
+appointmentSchema.index({ doctorId: 1, date: 1, timeSlot: 1, status: 1 });
+appointmentSchema.index({ createdAt: -1 });
 
 module.exports = mongoose.model('Appointment', appointmentSchema);

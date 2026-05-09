@@ -1,11 +1,17 @@
 const User = require('../models/User');
 const jwt = require('jsonwebtoken');
 
-// Rate limiting removed based on user request
+const getJwtSecret = () => {
+  const secret = process.env.JWT_SECRET;
+  if (!secret) {
+    throw new Error('JWT_SECRET is not defined in environment variables');
+  }
+  return secret;
+};
 
 // Generate JWT Token
 const generateToken = (id) => {
-  const secret = (process.env.JWT_SECRET || 'your_secret_key').trim();
+  const secret = getJwtSecret();
   return jwt.sign({ id }, secret, {
     expiresIn: '7d',
   });
@@ -65,10 +71,11 @@ const register = async (req, res) => {
       },
     });
   } catch (error) {
+    const isProduction = process.env.NODE_ENV === 'production';
     res.status(500).json({
       success: false,
       message: 'Registration failed.',
-      error: error.message,
+      ...(isProduction ? {} : { error: error.message }),
     });
   }
 };
@@ -132,10 +139,11 @@ const login = async (req, res) => {
       },
     });
   } catch (error) {
+    const isProduction = process.env.NODE_ENV === 'production';
     res.status(500).json({
       success: false,
       message: 'Login failed.',
-      error: error.message,
+      ...(isProduction ? {} : { error: error.message }),
     });
   }
 };

@@ -1,5 +1,6 @@
 const express = require('express');
 const cors = require('cors');
+const rateLimit = require('express-rate-limit');
 require('dotenv').config();
 
 const authRoutes = require('./routes/authRoutes');
@@ -20,6 +21,29 @@ try {
   console.error(error.stack);
 }
 
+// Rate limiting configuration
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 20, // 20 requests per 15 minutes
+  message: {
+    success: false,
+    message: 'Too many authentication attempts. Please try again later.'
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+const generalLimiter = rateLimit({
+  windowMs: 1 * 60 * 1000, // 1 minute
+  max: 100, // 100 requests per minute
+  message: {
+    success: false,
+    message: 'Too many requests. Please slow down.'
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
 const app = express();
 
 // Middleware
@@ -35,15 +59,15 @@ app.use(cors({
 }));
 
 // Routes
-app.use('/api/auth', authRoutes);
-app.use('/api/doctors', doctorRoutes);
-app.use('/api/appointments', appointmentRoutes);
-app.use('/api/patients', patientRoutes);
-app.use('/api/prescriptions', prescriptionRoutes);
-app.use('/api/pharmacies', pharmacyRoutes);
-app.use('/api/support', supportRoutes);
-app.use('/api/payments', paymentRoutes);
-app.use('/api/orders', medicineOrderRoutes);
+app.use('/api/auth', authLimiter, authRoutes);
+app.use('/api/doctors', generalLimiter, doctorRoutes);
+app.use('/api/appointments', generalLimiter, appointmentRoutes);
+app.use('/api/patients', generalLimiter, patientRoutes);
+app.use('/api/prescriptions', generalLimiter, prescriptionRoutes);
+app.use('/api/pharmacies', generalLimiter, pharmacyRoutes);
+app.use('/api/support', generalLimiter, supportRoutes);
+app.use('/api/payments', generalLimiter, paymentRoutes);
+app.use('/api/orders', generalLimiter, medicineOrderRoutes);
 
 if (adminRoutes) {
   app.use('/api/admin', adminRoutes);

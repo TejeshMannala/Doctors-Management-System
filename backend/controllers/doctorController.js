@@ -1,20 +1,35 @@
 const Doctor = require('../models/Doctor');
 const User = require('../models/User');
 
-// Get all doctors
+// Get all doctors with pagination
 const getAllDoctors = async (req, res) => {
   try {
-    const doctors = await Doctor.find({ isAvailable: true }).populate('userId', [
-      'fullName',
-      'email',
-      'phone',
-      'profileImage',
-    ]);
+    const page = parseInt(req.query.page) || 1;
+    const limit = Math.min(parseInt(req.query.limit) || 50, 100); // Default 50, cap at 100
+    const skip = (page - 1) * limit;
+
+    // Build filter
+    const filter = { isAvailable: true };
+
+    const doctors = await Doctor.find(filter)
+      .populate('userId', ['fullName', 'email', 'phone', 'profileImage'])
+      .skip(skip)
+      .limit(limit)
+      .sort({ rating: -1, experience: -1 })
+      .lean();
+
+    const total = await Doctor.countDocuments(filter);
+
+    // Ensure all doctors have valid userId
+    const validDoctors = doctors.filter(d => d.userId);
 
     res.status(200).json({
       success: true,
-      count: doctors.length,
-      doctors,
+      count: validDoctors.length,
+      total,
+      totalPages: Math.ceil(total / limit),
+      currentPage: page,
+      doctors: validDoctors,
     });
   } catch (error) {
     res.status(500).json({
@@ -128,7 +143,9 @@ const updateDoctorProfile = async (req, res) => {
 const adminUpdateDoctor = async (req, res) => {
   try {
     const doctorId = req.params.id;
-    const doctor = await Doctor.findByIdAndUpdate(doctorId, req.body, {
+    const { profileImage, ...doctorData } = req.body;
+    
+    const doctor = await Doctor.findByIdAndUpdate(doctorId, doctorData, {
       new: true,
       runValidators: true,
     });
@@ -140,10 +157,18 @@ const adminUpdateDoctor = async (req, res) => {
       });
     }
 
+    // Also update user profile image if provided
+    if (profileImage) {
+      await User.findByIdAndUpdate(doctor.userId, { profileImage }, { new: true });
+    }
+
+    // Fetch updated doctor with user data
+    const updatedDoctor = await Doctor.findById(doctorId).populate('userId', ['fullName', 'email', 'phone', 'profileImage']);
+
     res.status(200).json({
       success: true,
       message: 'Doctor profile updated successfully by admin',
-      doctor,
+      doctor: updatedDoctor,
     });
   } catch (error) {
     res.status(500).json({
@@ -188,7 +213,7 @@ const searchDoctorsBySpecialization = async (req, res) => {
 // Admin add a new doctor (creates User and Doctor profile)
 const adminAddDoctor = async (req, res) => {
   try {
-    const { fullName, email, password, specialization, experience, consultationFee } = req.body;
+    const { fullName, email, password, specialization, experience, consultationFee, profileImage } = req.body;
 
     // 1. Check if user already exists
     const existingUser = await User.findOne({ email });
@@ -202,6 +227,7 @@ const adminAddDoctor = async (req, res) => {
       email,
       password,
       role: 'doctor',
+      profileImage: profileImage || '',
     });
     await user.save();
 

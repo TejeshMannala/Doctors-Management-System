@@ -15,7 +15,7 @@ const DoctorsTable = () => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [newDoctor, setNewDoctor] = useState({
-    fullName: '', email: '', password: '', specialization: '', experience: '', consultationFee: 500
+    fullName: '', email: '', password: '', specialization: '', experience: '', consultationFee: 500, profileImage: ''
   });
 
   useEffect(() => {
@@ -47,7 +47,8 @@ const DoctorsTable = () => {
       experience: doc.experience,
       consultationFee: doc.consultationFee,
       isAvailable: doc.isAvailable,
-      rating: doc.rating || 0
+      rating: doc.rating || 0,
+      profileImage: doc.userId?.profileImage || ''
     });
   };
 
@@ -59,9 +60,30 @@ const DoctorsTable = () => {
   const handleSave = async (id) => {
     try {
       setSaving(true);
-      const res = await api.put(`/doctors/admin/${id}`, editFormData);
+      // Ensure profileImage is included in the request
+      const saveData = {
+        ...editFormData,
+        profileImage: editFormData.profileImage || ''
+      };
+      console.log('Saving doctor data:', saveData);
+      const res = await api.put(`/doctors/admin/${id}`, saveData);
       if (res.data.success) {
-        setDoctors(doctors.map(doc => doc._id === id ? { ...doc, ...editFormData } : doc));
+        // Update the doctor list with the new data including user profile image
+        const updatedDoctor = res.data.doctor;
+        setDoctors(doctors.map(doc => {
+          if (doc._id === id) {
+            return {
+              ...doc,
+              ...editFormData,
+              userId: {
+                ...doc.userId,
+                profileImage: saveData.profileImage || doc.userId?.profileImage || ''
+              }
+            };
+          }
+          return doc;
+        }));
+        alert('Doctor details updated successfully!');
       }
       setEditingId(null);
     } catch (error) {
@@ -195,13 +217,31 @@ const DoctorsTable = () => {
                       <tr key={doc._id} className={`${isEditing ? 'bg-indigo-500/5 shadow-inner' : 'hover:bg-slate-800/30'} transition-all`}>
                         <td className="p-6 leading-tight">
                           <div className="flex items-center gap-4">
-                            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-500/20 to-purple-600/20 border border-indigo-500/30 flex items-center justify-center text-indigo-400 font-bold shadow-sm">
-                              {doc.userId?.profileImage ? <img src={doc.userId.profileImage} className="w-full h-full rounded-2xl object-cover" /> : 'DR'}
-                            </div>
-                            <div>
-                              <div className={`font-bold text-base ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>{doc.userId?.fullName || 'Dr. Profile Pending'}</div>
-                              <div className="text-slate-500 text-xs font-medium">{doc.userId?.email || 'No email attached'}</div>
-                            </div>
+                            {isEditing ? (
+                              <div className="flex flex-col gap-2">
+                                <input 
+                                  type="url" 
+                                  name="profileImage" 
+                                  value={editFormData.profileImage || ''} 
+                                  onChange={handleChange} 
+                                  className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white text-xs focus:ring-2 focus:ring-indigo-500 outline-none" 
+                                  placeholder="Image URL"
+                                />
+                                {editFormData.profileImage && (
+                                  <img src={editFormData.profileImage} alt="Preview" className="w-10 h-10 rounded-xl object-cover border border-slate-700" />
+                                )}
+                              </div>
+                            ) : (
+                              <>
+                                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-500/20 to-purple-600/20 border border-indigo-500/30 flex items-center justify-center text-indigo-400 font-bold shadow-sm overflow-hidden">
+                                  {doc.userId?.profileImage ? <img src={doc.userId.profileImage} className="w-full h-full rounded-2xl object-cover" /> : 'DR'}
+                                </div>
+                                <div>
+                                  <div className={`font-bold text-base ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>{doc.userId?.fullName || 'Dr. Profile Pending'}</div>
+                                  <div className="text-slate-500 text-xs font-medium">{doc.userId?.email || 'No email attached'}</div>
+                                </div>
+                              </>
+                            )}
                           </div>
                         </td>
                         
@@ -366,6 +406,24 @@ const DoctorsTable = () => {
                       <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-600" size={16} />
                       <input required type="number" value={newDoctor.consultationFee} onChange={e => setNewDoctor({...newDoctor, consultationFee: e.target.value})} className="w-full bg-slate-950/50 border border-slate-800 rounded-2xl py-4 pl-10 pr-4 text-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none transition-all" />
                     </div>
+                  </div>
+                  <div className="space-y-2 md:col-span-2">
+                    <label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">Profile Image URL</label>
+                    <div className="relative">
+                      <input 
+                        type="url" 
+                        value={newDoctor.profileImage} 
+                        onChange={e => setNewDoctor({...newDoctor, profileImage: e.target.value})} 
+                        className="w-full bg-slate-950/50 border border-slate-800 rounded-2xl py-4 px-4 text-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none transition-all" 
+                        placeholder="https://example.com/doctor-image.jpg" 
+                      />
+                    </div>
+                    {newDoctor.profileImage && (
+                      <div className="mt-2 flex items-center gap-3">
+                        <img src={newDoctor.profileImage} alt="Preview" className="w-12 h-12 rounded-xl object-cover border border-slate-700" onError={(e) => e.target.style.display = 'none'} />
+                        <span className="text-xs text-slate-500">Image preview</span>
+                      </div>
+                    )}
                   </div>
                 </div>
 

@@ -2,6 +2,7 @@ const Appointment = require('../models/Appointment');
 const Doctor = require('../models/Doctor');
 const User = require('../models/User');
 const PatientProfile = require('../models/PatientProfile');
+const { sendErrorResponse } = require('../utils/errorHandler');
 
 const ACTIVE_APPOINTMENT_STATUSES = ['pending', 'confirmed'];
 
@@ -49,6 +50,26 @@ const bookAppointment = async (req, res) => {
       });
     }
 
+    // Check for slot conflict
+    const dateStart = new Date(date);
+    dateStart.setHours(0, 0, 0, 0);
+    const dateEnd = new Date(date);
+    dateEnd.setHours(23, 59, 59, 999);
+
+    const existingAppointment = await Appointment.findOne({
+      doctorId,
+      date: { $gte: dateStart, $lte: dateEnd },
+      timeSlot,
+      status: { $in: ['pending', 'confirmed'] }
+    });
+
+    if (existingAppointment) {
+      return res.status(409).json({
+        success: false,
+        message: 'This time slot is already booked. Please select another slot.'
+      });
+    }
+
     // Create appointment with enhanced data
     const appointment = new Appointment({
       patientId: req.user.id,
@@ -80,24 +101,43 @@ const bookAppointment = async (req, res) => {
   }
 };
 
-// Get patient's appointments
+// Get patient's appointments with pagination
 const getPatientAppointments = async (req, res) => {
   try {
-    const appointments = await Appointment.find({ patientId: req.user.id })
-      .populate({
-        path: 'doctorId',
-        select: 'specialization consultationFee userId',
-        populate: {
-          path: 'userId',
-          select: 'fullName email profileImage',
-        },
-      })
-      .populate('patientId', 'fullName email phone')
-      .sort({ date: -1 });
+    const page = parseInt(req.query.page) || 1;
+    const limit = Math.min(parseInt(req.query.limit) || 10, 50);
+    const skip = (page - 1) * limit;
+    const status = req.query.status || '';
+
+    const filter = { patientId: req.user.id };
+    if (status) {
+      filter.status = status;
+    }
+
+    const [appointments, total] = await Promise.all([
+      Appointment.find(filter)
+        .lean()
+        .populate({
+          path: 'doctorId',
+          select: 'specialization consultationFee userId',
+          populate: {
+            path: 'userId',
+            select: 'fullName email profileImage',
+          },
+        })
+        .populate('patientId', 'fullName email phone')
+        .skip(skip)
+        .limit(limit)
+        .sort({ date: -1 }),
+      Appointment.countDocuments(filter)
+    ]);
 
     res.status(200).json({
       success: true,
       count: appointments.length,
+      total,
+      totalPages: Math.ceil(total / limit),
+      currentPage: page,
       appointments,
     });
   } catch (error) {
@@ -109,7 +149,7 @@ const getPatientAppointments = async (req, res) => {
   }
 };
 
-// Get doctor's appointments
+// Get doctor's appointments with pagination
 const getDoctorAppointments = async (req, res) => {
   try {
     const doctor = await Doctor.findOne({ userId: req.user.id });
@@ -121,13 +161,32 @@ const getDoctorAppointments = async (req, res) => {
       });
     }
 
-    const appointments = await Appointment.find({ doctorId: doctor._id })
-      .populate('patientId', 'fullName email phone')
-      .sort({ date: -1 });
+    const page = parseInt(req.query.page) || 1;
+    const limit = Math.min(parseInt(req.query.limit) || 10, 50);
+    const skip = (page - 1) * limit;
+    const status = req.query.status || '';
+
+    const filter = { doctorId: doctor._id };
+    if (status) {
+      filter.status = status;
+    }
+
+    const [appointments, total] = await Promise.all([
+      Appointment.find(filter)
+        .lean()
+        .populate('patientId', 'fullName email phone')
+        .skip(skip)
+        .limit(limit)
+        .sort({ date: -1 }),
+      Appointment.countDocuments(filter)
+    ]);
 
     res.status(200).json({
       success: true,
       count: appointments.length,
+      total,
+      totalPages: Math.ceil(total / limit),
+      currentPage: page,
       appointments,
     });
   } catch (error) {
@@ -139,24 +198,50 @@ const getDoctorAppointments = async (req, res) => {
   }
 };
 
-// Get all appointments (Admin)
+// Get all appointments (Admin) with pagination
 const getAllAppointments = async (req, res) => {
   try {
-    const appointments = await Appointment.find()
-      .populate({
-        path: 'doctorId',
-        select: 'specialization',
-        populate: {
-          path: 'userId',
-          select: 'fullName email'
-        }
-      })
-      .populate('patientId', 'fullName email phone')
-      .sort({ createdAt: -1 });
+    const page = parseInt(req.query.page) || 1;
+    const limit = Math.min(parseInt(req.query.limit) || 10, 50);
+    const skip = (page - 1) * limit;
+    const status = req.query.status || '';
+    const date = req.query.date || '';
+
+    const filter = {};
+    if (status) {
+      filter.status = status;
+    }
+    if (date) {
+      const startOfDay = new Date(date);
+      startOfDay.setHours(0, 0, 0, 0);
+      const endOfDay = new Date(date);
+      endOfDay.setHours(23, 59, 59, 999);
+      filter.date = { $gte: startOfDay, $lte: endOfDay };
+    }
+
+    const [appointments, total] = await Promise.all([
+      Appointment.find(filter)
+        .populate({
+          path: 'doctorId',
+          select: 'specialization',
+          populate: {
+            path: 'userId',
+            select: 'fullName email'
+          }
+        })
+        .populate('patientId', 'fullName email phone')
+        .skip(skip)
+        .limit(limit)
+        .sort({ createdAt: -1 }),
+      Appointment.countDocuments(filter)
+    ]);
 
     res.status(200).json({
       success: true,
       count: appointments.length,
+      total,
+      totalPages: Math.ceil(total / limit),
+      currentPage: page,
       appointments,
     });
   } catch (error) {
@@ -196,8 +281,13 @@ const updateAppointmentStatus = async (req, res) => {
     }
 
     if (status === 'completed') {
-      const { autoGeneratePrescription } = require('../utils/prescriptionService');
-      await autoGeneratePrescription(appointment);
+      try {
+        const { autoGeneratePrescription } = require('../utils/prescriptionService');
+        await autoGeneratePrescription(appointment);
+      } catch (prescriptionError) {
+        console.error('Auto-prescription generation failed:', prescriptionError);
+        // Don't fail the status update if prescription generation fails
+      }
     }
 
     res.status(200).json({
