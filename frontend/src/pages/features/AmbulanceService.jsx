@@ -2,16 +2,47 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import BackButton from '../../components/BackButton';
+import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
+import 'leaflet/dist/leaflet.css';
+import L from 'leaflet';
+
+// Fix for default marker icons in React-Leaflet
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
+  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+});
+
+// Custom Ambulance Icon
+const ambulanceIcon = L.divIcon({
+  html: '<div style="font-size: 30px; line-height: 1; filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.3));">🚑</div>',
+  className: 'custom-leaflet-icon',
+  iconSize: [30, 30],
+  iconAnchor: [15, 30],
+  popupAnchor: [0, -30],
+});
+
+// Component to dynamically update map center
+function MapUpdater({ center }) {
+  const map = useMap();
+  useEffect(() => {
+    map.setView(center, 13);
+  }, [center, map]);
+  return null;
+}
 
 const AmbulanceService = () => {
   const { t } = useTranslation();
   const [isSearching, setIsSearching] = useState(false);
   const [userLocation, setUserLocation] = useState('');
+  const [mapCenter, setMapCenter] = useState([17.3850, 78.4867]); // Default Hyderabad
   const [hasScanned, setHasScanned] = useState(false);
   const [ambulances, setAmbulances] = useState([]);
   const [selectedAmbulance, setSelectedAmbulance] = useState(null);
   const [dispatchModal, setDispatchModal] = useState({ isOpen: false, status: 'idle' });
   const [dispatchDetails, setDispatchDetails] = useState({ location: '', phone: '' });
+  const [locationError, setLocationError] = useState('');
 
   const mockAmbulances = [
     { id: 1, driver: 'Raju Sharma', distance: '1.2 km', eta: '4 mins', status: 'Available', type: 'Advanced Life Support (ALS)', reg: 'TS 09 EU 4532' },
@@ -20,7 +51,7 @@ const AmbulanceService = () => {
     { id: 4, driver: 'Ali Khan', distance: '4.1 km', eta: '12 mins', status: 'Available', type: 'Patient Transport (PTS)', reg: 'TS 10 MN 8821' },
   ];
 
-  const handleSearch = (e) => {
+  const handleSearch = async (e) => {
     e?.preventDefault();
     if (!userLocation.trim()) return;
 
@@ -28,12 +59,70 @@ const AmbulanceService = () => {
     setHasScanned(true);
     setAmbulances([]);
     setSelectedAmbulance(null);
+    setLocationError('');
     
-    // Simulate API call and searching animation
-    setTimeout(() => {
-      setAmbulances(mockAmbulances.sort((a, b) => parseFloat(a.distance) - parseFloat(b.distance)));
+    try {
+      // Geocode the user location
+      const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(userLocation)}`);
+      const data = await res.json();
+      
+      if (data && data.length > 0) {
+        const lat = parseFloat(data[0].lat);
+        const lon = parseFloat(data[0].lon);
+        setMapCenter([lat, lon]);
+        generateAmbulances(lat, lon);
+      } else {
+        setLocationError('City not found. Please enter a valid city name.');
+        setIsSearching(false);
+      }
+    } catch (error) {
+      console.error("Geocoding error:", error);
+      setLocationError('Error locating city. Please try again.');
       setIsSearching(false);
-    }, 2500);
+    }
+  };
+
+  const generateAmbulances = (lat, lon) => {
+    const generatedAmbulances = mockAmbulances.map((amb, index) => {
+      const offsetLat = (Math.random() - 0.5) * 0.05;
+      const offsetLon = (Math.random() - 0.5) * 0.05;
+      return {
+        ...amb,
+        lat: lat + offsetLat,
+        lng: lon + offsetLon,
+        distance: (Math.random() * 5).toFixed(1) + ' km'
+      };
+    }).sort((a, b) => parseFloat(a.distance) - parseFloat(b.distance));
+    
+    setTimeout(() => {
+      setAmbulances(generatedAmbulances);
+      setIsSearching(false);
+    }, 1500);
+  };
+
+  const getCurrentLocation = () => {
+    setIsSearching(true);
+    setLocationError('');
+    
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const lat = position.coords.latitude;
+          const lon = position.coords.longitude;
+          setMapCenter([lat, lon]);
+          setHasScanned(true);
+          generateAmbulances(lat, lon);
+        },
+        () => {
+          setLocationError(t('Location access denied. Please enter your city manually.'));
+          setIsSearching(false);
+        },
+        { timeout: 10000 }
+      );
+    } else {
+      setLocationError(t('Geolocation is not supported by your browser.'));
+      setIsSearching(false);
+    }
   };
 
   const handleDispatch = (e) => {
@@ -60,33 +149,88 @@ const AmbulanceService = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Map & Search Section */}
           <div className="lg:col-span-2 bg-white/60 backdrop-blur-xl border border-white/50 rounded-[32px] p-8 shadow-xl relative overflow-hidden min-h-[500px] flex flex-col">
-            <div className="flex-grow flex flex-col items-center justify-center relative">
-              {/* Fake Map Background */}
-              <div className="absolute inset-0 bg-slate-100 rounded-2xl overflow-hidden opacity-50" style={{ backgroundImage: 'radial-gradient(#cbd5e1 1px, transparent 1px)', backgroundSize: '20px 20px' }}></div>
+            <div className="flex-grow flex flex-col items-center justify-center relative rounded-[32px] overflow-hidden min-h-[400px]">
+              {hasScanned && !locationError && !isSearching ? (
+                <div className="absolute inset-0 z-0">
+                  <MapContainer center={mapCenter} zoom={13} style={{ height: '100%', width: '100%', zIndex: 1 }}>
+                    <TileLayer
+                      url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
+                      attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+                    />
+                    <MapUpdater center={mapCenter} />
+                    
+                    {/* User Location Marker */}
+                    <Marker position={mapCenter}>
+                      <Popup>Your Location</Popup>
+                    </Marker>
+                    
+                    {/* Ambulance Markers */}
+                    {ambulances.map(amb => (
+                      <Marker 
+                        key={amb.id} 
+                        position={[amb.lat, amb.lng]} 
+                        icon={ambulanceIcon}
+                        eventHandlers={{
+                          click: () => setSelectedAmbulance(amb),
+                        }}
+                      >
+                        <Popup>
+                          <div className="text-center">
+                            <strong>{amb.type}</strong><br/>
+                            {amb.eta} away<br/>
+                            Driver: {amb.driver}
+                          </div>
+                        </Popup>
+                      </Marker>
+                    ))}
+                  </MapContainer>
+                </div>
+              ) : (
+                <div className="absolute inset-0 bg-slate-100 rounded-2xl overflow-hidden opacity-50" style={{ backgroundImage: 'radial-gradient(#cbd5e1 1px, transparent 1px)', backgroundSize: '20px 20px' }}></div>
+              )}
               
               <AnimatePresence>
-                {!isSearching && !hasScanned && ambulances.length === 0 && (
+                {(!isSearching && (!hasScanned || locationError) && ambulances.length === 0) && (
                   <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="z-10 text-center bg-white/90 backdrop-blur-md p-8 rounded-[32px] shadow-2xl max-w-md w-full border border-white">
                     <div className="w-16 h-16 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-2xl mx-auto mb-4 shadow-sm">📍</div>
                     <h3 className="text-2xl font-black text-slate-900 mb-2">{t('Where are you?')}</h3>
-                    <p className="text-slate-500 mb-6">{t('Enter your current location or emergency address to find nearby ambulances.')}</p>
+                    <p className="text-slate-500 mb-6">{t('Enter your current city or emergency address to find nearby ambulances.')}</p>
                     
+                    {locationError && (
+                      <div className="mb-4 p-3 bg-red-100 text-red-600 rounded-xl text-sm font-bold">
+                        {locationError}
+                      </div>
+                    )}
+
                     <form onSubmit={handleSearch} className="flex flex-col gap-4">
                       <input 
                         type="text" 
                         required
-                        placeholder={t('e.g. Jubilee Hills, Hyderabad')}
+                        placeholder={t('e.g. Hyderabad')}
                         value={userLocation}
                         onChange={(e) => setUserLocation(e.target.value)}
                         className="w-full px-6 py-4 rounded-2xl border border-slate-200 focus:ring-2 focus:ring-red-500 outline-none text-center text-lg font-bold shadow-sm"
                       />
                       <button 
                         type="submit"
-                        className="w-full py-4 bg-red-600 text-white font-black text-lg rounded-2xl shadow-lg shadow-red-600/30 hover:bg-red-700 active:scale-95 transition-all"
+                        disabled={isSearching}
+                        className="w-full py-4 bg-red-600 text-white font-black text-lg rounded-2xl shadow-lg shadow-red-600/30 hover:bg-red-700 active:scale-95 transition-all disabled:opacity-70"
                       >
                         {t('Find Nearest Ambulance')}
                       </button>
                     </form>
+                    
+                    <div className="flex items-center justify-center gap-4 text-slate-400 font-bold uppercase text-xs my-6">
+                      <span className="w-16 h-px bg-slate-200"></span> OR <span className="w-16 h-px bg-slate-200"></span>
+                    </div>
+                    
+                    <button 
+                      onClick={getCurrentLocation}
+                      disabled={isSearching}
+                      className="w-full py-4 bg-slate-100 text-slate-700 font-bold text-lg rounded-2xl hover:bg-slate-200 active:scale-95 transition-all border border-slate-200 flex items-center justify-center gap-3 disabled:opacity-70"
+                    >
+                      <span className="text-xl">🧭</span> {t('Use My Current Location')}
+                    </button>
                   </motion.div>
                 )}
 
@@ -99,32 +243,6 @@ const AmbulanceService = () => {
                     </div>
                     <h3 className="text-2xl font-bold text-slate-800">{t('Scanning area...')}</h3>
                     <p className="text-slate-500">{t('Locating available ambulances near you')}</p>
-                  </motion.div>
-                )}
-
-                {ambulances.length > 0 && (
-                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="absolute inset-0 z-10 p-4">
-                    {/* Fake Map Markers */}
-                    {ambulances.map((amb, i) => (
-                      <motion.div 
-                        key={amb.id}
-                        initial={{ scale: 0, y: -20 }}
-                        animate={{ scale: 1, y: 0 }}
-                        transition={{ delay: i * 0.2 }}
-                        className={`absolute ${i===0 ? 'top-1/4 left-1/3' : i===1 ? 'top-1/2 right-1/4' : i===2 ? 'bottom-1/3 left-1/4' : 'bottom-1/4 right-1/3'} cursor-pointer`}
-                        onClick={() => setSelectedAmbulance(amb)}
-                      >
-                        <div className={`w-12 h-12 rounded-full flex items-center justify-center text-xl shadow-lg border-4 border-white transition-transform hover:scale-110 ${amb.status === 'Available' ? 'bg-emerald-500' : 'bg-amber-500'}`}>
-                          🚑
-                        </div>
-                        <div className="bg-white px-2 py-1 rounded-md shadow-md text-[10px] font-bold mt-1 text-center truncate w-20 -ml-4">
-                          {amb.eta}
-                        </div>
-                      </motion.div>
-                    ))}
-                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
-                       <div className="w-8 h-8 bg-blue-600 border-4 border-white rounded-full shadow-lg"></div>
-                    </div>
                   </motion.div>
                 )}
               </AnimatePresence>
