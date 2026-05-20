@@ -1,7 +1,8 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { HashRouter as Router, Routes, Route, Link, useLocation, useNavigate } from 'react-router-dom';
 import { LayoutDashboard, Users, Calendar, LogOut, FileText, Bell, Activity, Heart, Shield, ArrowLeft, Menu, X } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { AnimatePresence, motion as Motion } from 'framer-motion';
+import './App.css';
 
 import ProtectedRoute from './components/ProtectedRoute';
 import Login from './pages/Login';
@@ -128,7 +129,9 @@ const Header = ({ pendingCount, onMenuClick }) => {
   try {
     const info = JSON.parse(localStorage.getItem('adminInfo') || '{}');
     if (info.fullName) adminName = info.fullName.split(' ')[0];
-  } catch(e) {}
+  } catch {
+    adminName = 'Admin';
+  }
 
   const handleLogout = () => {
     localStorage.removeItem('adminToken');
@@ -238,9 +241,15 @@ const LayoutContainer = ({ children }) => {
   }, [pendingCount, lastNotificationTime]);
 
   useEffect(() => {
-    checkNotifications();
-    const interval = setInterval(checkNotifications, 30000);
-    return () => clearInterval(interval);
+    const runNotificationCheck = () => {
+      void checkNotifications();
+    };
+    const initialCheck = setTimeout(runNotificationCheck, 0);
+    const interval = setInterval(runNotificationCheck, 30000);
+    return () => {
+      clearTimeout(initialCheck);
+      clearInterval(interval);
+    };
   }, [checkNotifications]);
 
   return (
@@ -255,7 +264,7 @@ const LayoutContainer = ({ children }) => {
       />
       <AnimatePresence>
         {isSidebarOpen && (
-          <motion.button
+          <Motion.button
             type="button"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -270,13 +279,13 @@ const LayoutContainer = ({ children }) => {
       <div className="flex-1 flex flex-col overflow-hidden min-w-0">
         <Header pendingCount={pendingCount} onMenuClick={() => setIsSidebarOpen(true)} />
         <main className="flex-1 overflow-y-auto p-4 md:p-8">
-          <motion.div
+          <Motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             className="h-full"
           >
             {children}
-          </motion.div>
+          </Motion.div>
         </main>
       </div>
     </div>

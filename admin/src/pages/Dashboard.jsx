@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-
-import { Users, Calendar, Activity, FileText, ArrowUpRight, ArrowDownRight, Clock } from 'lucide-react';
+import { motion as Motion } from 'framer-motion';
+import { Users, Calendar, Activity, FileText, Clock } from 'lucide-react';
 import api from '../utils/api';
 import { useTheme } from '../utils/ThemeContext';
 
@@ -49,13 +49,13 @@ const Dashboard = () => {
   return (
     <div className="max-w-7xl mx-auto">
       
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
+      <Motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
         <h1 className="text-3xl font-bold text-white mb-2">Platform Overview</h1>
         <p className="text-slate-400 mb-8">Real-time metrics and administration controls</p>
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           {statCards.map((stat, idx) => (
-            <motion.div 
+            <Motion.div 
               key={idx} 
               initial={{ opacity: 0, y: 20 }} 
               animate={{ opacity: 1, y: 0 }} 
@@ -76,12 +76,12 @@ const Dashboard = () => {
                 <h3 className="text-slate-400 font-medium text-sm mb-1">{stat.title}</h3>
                 <h2 className={`text-3xl font-bold ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>{stat.value}</h2>
               </div>
-            </motion.div>
+            </Motion.div>
           ))}
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <motion.div 
+          <Motion.div 
             initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.4 }}
             className={`backdrop-blur-sm border rounded-2xl p-6 ${
               theme === 'dark' ? 'bg-slate-800/40 border-slate-700/50' : 'bg-white border-slate-200 shadow-xl'
@@ -108,9 +108,9 @@ const Dashboard = () => {
                 </div>
               ))}
             </div>
-          </motion.div>
+          </Motion.div>
 
-          <motion.div 
+          <Motion.div 
             initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.5 }}
             className={`backdrop-blur-sm border rounded-2xl p-6 ${
               theme === 'dark' ? 'bg-slate-800/40 border-slate-700/50' : 'bg-white border-slate-200 shadow-xl'
@@ -138,9 +138,9 @@ const Dashboard = () => {
                  </div>
                </div>
              </div>
-          </motion.div>
+          </Motion.div>
         </div>
-      </motion.div>
+      </Motion.div>
     </div>
   );
 };
