@@ -20,6 +20,14 @@ const startServer = async (port = PORT) => {
 
     const adminDist = path.join(__dirname, '../admin/dist');
     const frontendDist = path.join(__dirname, '../frontend/dist');
+    const sendIndex = (res, filePath) => {
+      res.set({
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        Pragma: 'no-cache',
+        Expires: '0'
+      });
+      return res.sendFile(filePath);
+    };
 
     // Static files
     app.use('/admin', express.static(adminDist));
@@ -42,11 +50,11 @@ const startServer = async (port = PORT) => {
       
      
       if (req.path.startsWith('/admin')) {
-        return res.sendFile(path.join(adminDist, 'index.html'));
+        return sendIndex(res, path.join(adminDist, 'index.html'));
       }
       
     
-      res.sendFile(path.join(frontendDist, 'index.html'));
+      return sendIndex(res, path.join(frontendDist, 'index.html'));
     });
 
     const server = app.listen(port, () => {
