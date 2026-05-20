@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { HashRouter as Router, Routes, Route, Link, useLocation, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Users, Calendar, LogOut, FileText, Bell, Search, Activity, Heart, Shield, ArrowLeft } from 'lucide-react';
+import { LayoutDashboard, Users, Calendar, LogOut, FileText, Bell, Activity, Heart, Shield, ArrowLeft, Menu, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 import ProtectedRoute from './components/ProtectedRoute';
@@ -17,7 +17,7 @@ import { ThemeProvider, useTheme } from './utils/ThemeContext';
 import { Moon, Sun } from 'lucide-react';
 import NotFound from './pages/NotFound';
 
-const Sidebar = () => {
+const Sidebar = ({ isOpen, onClose }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const { theme } = useTheme();
@@ -25,6 +25,7 @@ const Sidebar = () => {
   const handleLogout = () => {
     localStorage.removeItem('adminToken');
     localStorage.removeItem('adminInfo');
+    onClose?.();
     navigate('/login');
   };
 
@@ -41,10 +42,22 @@ const Sidebar = () => {
 
   return (
       <div 
-        className={`sticky top-0 h-screen w-[260px] min-w-[260px] border-r backdrop-blur-xl flex flex-col p-6 z-50 ${
+        className={`fixed inset-y-0 left-0 lg:sticky lg:top-0 h-screen w-[260px] min-w-[260px] border-r backdrop-blur-xl flex flex-col p-6 z-50 transform transition-transform duration-300 lg:translate-x-0 ${
+          isOpen ? 'translate-x-0' : '-translate-x-full'
+        } ${
           theme === 'dark' ? 'bg-slate-900/90 border-slate-800' : 'bg-white/90 border-slate-200 shadow-xl'
         }`}
       >
+        <button
+          onClick={onClose}
+          className={`absolute right-4 top-4 lg:hidden p-2 rounded-full transition-colors ${
+            theme === 'dark' ? 'text-slate-300 hover:bg-slate-800 hover:text-white' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+          }`}
+          aria-label="Close admin menu"
+        >
+          <X size={20} />
+        </button>
+
         {/* Back Button */}
         <button
           onClick={() => navigate(-1)}
@@ -81,7 +94,7 @@ const Sidebar = () => {
               <Link 
                 to={item.path} 
                 key={item.name}
-                onClick={() => {}}
+                onClick={onClose}
                 className={`flex items-center gap-3 px-4 py-3.5 rounded-xl font-medium transition-all duration-300 relative overflow-hidden group ${
                   isActive 
                     ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/30' 
@@ -110,16 +123,34 @@ const Sidebar = () => {
 
 const Header = ({ pendingCount, onMenuClick }) => {
   const { theme, toggleTheme } = useTheme();
+  const navigate = useNavigate();
   let adminName = 'Admin';
   try {
     const info = JSON.parse(localStorage.getItem('adminInfo') || '{}');
     if (info.fullName) adminName = info.fullName.split(' ')[0];
   } catch(e) {}
 
+  const handleLogout = () => {
+    localStorage.removeItem('adminToken');
+    localStorage.removeItem('adminInfo');
+    navigate('/login');
+  };
+
   return (
     <div className={`h-20 px-4 md:px-8 flex items-center justify-between border-b backdrop-blur-xl sticky top-0 z-20 transition-all duration-300 ${
       theme === 'dark' ? 'border-slate-800 bg-slate-900/40' : 'border-slate-200 bg-white/60 shadow-sm'
     }`}>
+      <button
+        onClick={onMenuClick}
+        className={`lg:hidden p-2.5 rounded-full border transition-all ${
+          theme === 'dark'
+            ? 'bg-slate-800/50 border-slate-700/50 text-slate-300 hover:bg-slate-700 hover:text-white'
+            : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-indigo-600 shadow-sm'
+        }`}
+        aria-label="Open admin menu"
+      >
+        <Menu size={20} />
+      </button>
 
       <div className="flex items-center gap-2 md:gap-5 ml-auto">
         <button 
@@ -146,6 +177,18 @@ const Header = ({ pendingCount, onMenuClick }) => {
           )}
         </button>
 
+        <button
+          onClick={handleLogout}
+          className={`flex items-center gap-2 px-3 md:px-4 py-2.5 rounded-full border text-sm font-semibold transition-all transform hover:-translate-y-0.5 ${
+            theme === 'dark'
+              ? 'bg-slate-800/50 border-slate-700/50 text-slate-300 hover:bg-red-500/10 hover:border-red-500/30 hover:text-red-300'
+              : 'bg-white border-slate-200 text-slate-600 hover:bg-red-50 hover:border-red-200 hover:text-red-600 shadow-sm'
+          }`}
+        >
+          <LogOut size={18} />
+          <span className="hidden sm:inline">Logout</span>
+        </button>
+
         <div className={`flex items-center gap-2 md:gap-3 pl-2 md:pl-4 border-l cursor-pointer group ${
           theme === 'dark' ? 'border-slate-800' : 'border-slate-200'
         }`}>
@@ -168,6 +211,7 @@ const LayoutContainer = ({ children }) => {
   const [pendingCount, setPendingCount] = useState(0);
   const [showToast, setShowToast] = useState(false);
   const [lastNotificationTime, setLastNotificationTime] = useState(0);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const { theme } = useTheme();
 
   const checkNotifications = useCallback(async () => {
@@ -209,9 +253,22 @@ const LayoutContainer = ({ children }) => {
         type="notification"
         message={`You have ${pendingCount} pending feedback ticket(s) waiting for response.`}
       />
-      <Sidebar />
+      <AnimatePresence>
+        {isSidebarOpen && (
+          <motion.button
+            type="button"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setIsSidebarOpen(false)}
+            className="fixed inset-0 z-40 bg-slate-950/70 backdrop-blur-sm lg:hidden"
+            aria-label="Close admin menu overlay"
+          />
+        )}
+      </AnimatePresence>
+      <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
       <div className="flex-1 flex flex-col overflow-hidden min-w-0">
-        <Header pendingCount={pendingCount} />
+        <Header pendingCount={pendingCount} onMenuClick={() => setIsSidebarOpen(true)} />
         <main className="flex-1 overflow-y-auto p-4 md:p-8">
           <motion.div
             initial={{ opacity: 0, y: 10 }}

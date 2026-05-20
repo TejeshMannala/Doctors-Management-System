@@ -108,7 +108,7 @@ const ExploreDoctors = () => {
     fetchDoctors();
   }, []);
 
-  // Prevent background scrolling when modal is open
+  
   useEffect(() => {
     if (selectedDoctor) {
       document.body.style.overflow = 'hidden';
@@ -142,13 +142,28 @@ const ExploreDoctors = () => {
     }
 
     if (experienceFilter) {
-      const minExp = parseInt(experienceFilter, 10);
-      filtered = filtered.filter((doctor) => doctor.experience >= minExp);
+      filtered = filtered.filter((doctor) => {
+        const exp = doctor.experience || 0;
+        if (experienceFilter === '5-10') return exp >= 5 && exp <= 10;
+        if (experienceFilter === '10-15') return exp >= 10 && exp <= 15;
+        if (experienceFilter === '15-20') return exp >= 15 && exp <= 20;
+        
+        // Fallback for old integer values if they are still present
+        const minExp = parseInt(experienceFilter, 10);
+        if (!isNaN(minExp)) return exp >= minExp;
+        
+        return true;
+      });
     }
 
     if (feeFilter) {
-      const maxFee = parseInt(feeFilter, 10);
-      filtered = filtered.filter((doctor) => doctor.consultationFee <= maxFee);
+      filtered = filtered.filter((doctor) => {
+        const fee = doctor.consultationFee || 0;
+        if (feeFilter === '500 to 1000') return fee >= 500 && fee <= 1000;
+        if (feeFilter === '1000 to 1500') return fee >= 1000 && fee <= 1500;
+        if (feeFilter === '1500 to 2000') return fee >= 1500 && fee <= 2000;
+        return true;
+      });
     }
 
     setFilteredDoctors(filtered);
@@ -307,10 +322,9 @@ const ExploreDoctors = () => {
               className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
             >
               <option value="">{t('All Experience')}</option>
-              <option value="0">0+ {t('years')}</option>
-              <option value="5">5+ {t('years')}</option>
-              <option value="10">10+ {t('years')}</option>
-              <option value="15">15+ {t('years')}</option>
+              <option value="5-10">5 - 10 {t('years')}</option>
+              <option value="10-15">10 - 15 {t('years')}</option>
+              <option value="15-20">15 - 20 {t('years')}</option>
             </select>
 
             <select
@@ -319,11 +333,10 @@ const ExploreDoctors = () => {
               className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
             >
               <option value="">{t('Any Fee')}</option>
-              <option value="500">Under ₹500</option>
-              <option value="1000">Under ₹1000</option>
-              <option value="1500">Under ₹1500</option>
-              <option value="2000">Under ₹2000</option>
-            </select>
+              <option value="500 to 1000">Between ₹500 - ₹1000</option>
+              <option value="1000 to 1500">Between  ₹1000 - ₹1500</option>
+              <option value="1500 to 2000">Between  ₹1500 - ₹2000</option>
+            </select> 
           </div>
 
           {hasActiveFilters && (

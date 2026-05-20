@@ -30,9 +30,9 @@ const startServer = async (port = PORT) => {
       res.status(204).end();
     });
 
-    // SPA Routing
+   
     app.get('*', (req, res) => {
-      // If it's an API route that wasn't matched, return 404
+      
       if (req.path.startsWith('/api')) {
         return res.status(404).json({
           success: false,
@@ -40,12 +40,12 @@ const startServer = async (port = PORT) => {
         });
       }
       
-      // For Admin SPA
+     
       if (req.path.startsWith('/admin')) {
         return res.sendFile(path.join(adminDist, 'index.html'));
       }
       
-      // For Main Frontend SPA
+    
       res.sendFile(path.join(frontendDist, 'index.html'));
     });
 

@@ -52,6 +52,15 @@ const PatientsTable = () => {
     { label: 'Recently Joined', value: users.filter(u => u.createdAt && (new Date() - new Date(u.createdAt)) < 7 * 24 * 60 * 60 * 1000).length, icon: <Calendar size={20} />, color: 'bg-amber-500/10 text-amber-400' },
   ];
 
+  const filteredUsers = users.filter((user) => {
+    const searchLower = searchTerm.toLowerCase();
+    return (
+      (user.fullName || '').toLowerCase().includes(searchLower) ||
+      (user.email || '').toLowerCase().includes(searchLower) ||
+      (user.role || '').toLowerCase().includes(searchLower)
+    );
+  });
+
   return (
     <div className="max-w-7xl mx-auto h-full flex flex-col">
       <BackButton />
@@ -115,8 +124,68 @@ const PatientsTable = () => {
           </button>
         </div>
 
-        {/* Table */}
-        <div className="overflow-x-auto">
+        {/* Mobile list */}
+        <div className="md:hidden">
+          {loading ? (
+            <div className="p-12 text-center">
+              <div className="w-10 h-10 border-4 border-indigo-500/20 border-t-indigo-500 rounded-full animate-spin mx-auto"></div>
+            </div>
+          ) : filteredUsers.length === 0 ? (
+            <div className="p-10 text-center text-slate-500">Zero matching records found in the database.</div>
+          ) : (
+            <div className="divide-y divide-slate-700/30">
+              {filteredUsers.map((user) => {
+                const isDoctor = user.role === 'doctor';
+                const isAdmin = user.role === 'admin';
+
+                return (
+                  <div key={user._id} className={`p-5 transition-colors ${theme === 'dark' ? 'hover:bg-slate-800/30' : 'hover:bg-slate-50'}`}>
+                    <div className="flex items-start gap-4">
+                      <div className={`w-12 h-12 rounded-2xl flex shrink-0 items-center justify-center font-black shadow-sm ${
+                        theme === 'dark' ? 'bg-gradient-to-br from-indigo-500/10 to-purple-600/10 border-slate-700/50 text-indigo-400' : 'bg-indigo-50 border-indigo-100 text-indigo-600'
+                      }`}>
+                        {(user.fullName || 'U').charAt(0)}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="min-w-0">
+                            <div className={`font-bold text-base truncate ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>{user.fullName || 'Unnamed User'}</div>
+                            <div className="text-slate-500 text-xs truncate">{user.email || 'No email'}</div>
+                          </div>
+                          <span className={`shrink-0 inline-flex items-center px-3 py-1 rounded-xl text-[10px] font-black tracking-widest border
+                            ${isAdmin ? 'bg-purple-500/10 text-purple-400 border-purple-500/20' :
+                              isDoctor ? 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20' : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'}`}
+                          >
+                            {(user.role || 'user').toUpperCase()}
+                          </span>
+                        </div>
+
+                        <div className="mt-4 grid grid-cols-2 gap-3 text-xs">
+                          <div>
+                            <p className="font-bold uppercase tracking-widest text-slate-500">Registered</p>
+                            <p className={theme === 'dark' ? 'text-slate-300' : 'text-slate-700'}>{formatDate(user.createdAt, false)}</p>
+                          </div>
+                          <div>
+                            <p className="font-bold uppercase tracking-widest text-slate-500">Sessions</p>
+                            <p className={theme === 'dark' ? 'text-slate-300' : 'text-slate-700'}>{user.loginCount || 0}</p>
+                          </div>
+                          <div className="col-span-2">
+                            <p className="font-bold uppercase tracking-widest text-slate-500">Last Access</p>
+                            <p className={theme === 'dark' ? 'text-slate-300' : 'text-slate-700'}>{formatDate(user.lastLoginAt)}</p>
+                            {user.lastLoginIp && <p className="font-mono text-[10px] text-slate-500">{user.lastLoginIp}</p>}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* Desktop table */}
+        <div className="hidden overflow-x-auto md:block">
           <table className="w-full text-left border-collapse min-w-[900px]">
             <thead>
               <tr className={`text-xs uppercase tracking-widest font-bold ${
@@ -133,23 +202,10 @@ const PatientsTable = () => {
             <tbody className="text-sm divide-y divide-slate-700/30 font-medium">
               {loading ? (
                 <tr><td colSpan="6" className="p-20 text-center"><div className="w-10 h-10 border-4 border-indigo-500/20 border-t-indigo-500 rounded-full animate-spin mx-auto"></div></td></tr>
-              ) : (() => {
-                const filteredUsers = users.filter((user) => {
-                  const searchLower = searchTerm.toLowerCase();
-                  return (
-                    user.fullName.toLowerCase().includes(searchLower) ||
-                    user.email.toLowerCase().includes(searchLower) ||
-                    user.role.toLowerCase().includes(searchLower)
-                  );
-                });
-
-                if (filteredUsers.length === 0) {
-                  return (
-                    <tr><td colSpan="6" className="p-20 text-center text-slate-500">Zero matching records found in the database.</td></tr>
-                  );
-                }
-
-                return filteredUsers.map((user) => {
+              ) : filteredUsers.length === 0 ? (
+                <tr><td colSpan="6" className="p-20 text-center text-slate-500">Zero matching records found in the database.</td></tr>
+              ) : (
+                filteredUsers.map((user) => {
                   const isDoctor = user.role === 'doctor';
                   const isAdmin = user.role === 'admin';
                   
@@ -160,11 +216,11 @@ const PatientsTable = () => {
                           <div className={`w-12 h-12 rounded-2xl flex items-center justify-center font-black shadow-sm group-hover:scale-105 transition-transform ${
                             theme === 'dark' ? 'bg-gradient-to-br from-indigo-500/10 to-purple-600/10 border-slate-700/50 text-indigo-400' : 'bg-indigo-50 border-indigo-100 text-indigo-600'
                           }`}>
-                            {user.fullName.charAt(0)}
+                            {(user.fullName || 'U').charAt(0)}
                           </div>
                           <div>
-                            <div className={`font-bold text-base ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>{user.fullName}</div>
-                            <div className="text-slate-500 text-xs tracking-tight">{user.email}</div>
+                            <div className={`font-bold text-base ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>{user.fullName || 'Unnamed User'}</div>
+                            <div className="text-slate-500 text-xs tracking-tight">{user.email || 'No email'}</div>
                           </div>
                         </div>
                       </td>
@@ -203,8 +259,8 @@ const PatientsTable = () => {
                       </td>
                     </tr>
                   );
-                });
-              })()}
+                })
+              )}
             </tbody>
           </table>
         </div>
