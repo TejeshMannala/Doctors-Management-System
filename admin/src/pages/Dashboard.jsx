@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+
 import { Users, Calendar, Activity, FileText, ArrowUpRight, ArrowDownRight, Clock } from 'lucide-react';
 import api from '../utils/api';
 import { useTheme } from '../utils/ThemeContext';
