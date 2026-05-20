@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const rawApiUrl = import.meta.env.VITE_API_URL || 'https://backend-ulf8.onrender.com/api';
+const rawApiUrl = import.meta.env.VITE_API_URL || '/api';
 const baseURL = rawApiUrl.replace(/\/+$/, '');
 
 const api = axios.create({

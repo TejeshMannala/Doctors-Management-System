@@ -11,7 +11,7 @@ if (!process.env.JWT_SECRET) {
   console.log('✅ JWT_SECRET loaded from environment.');
 }
 
-const PORT = parseInt(process.env.PORT, 10) || 5000;
+const PORT = parseInt(process.env.PORT, 10) || 5001;
 
 const startServer = async (port = PORT) => {
   try {
