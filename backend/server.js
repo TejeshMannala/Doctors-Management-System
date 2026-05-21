@@ -3,7 +3,10 @@ const app = require('./app');
 const connectDB = require('./config/db');
 const ensureAdminAccount = require('./utils/ensureAdminAccount');
 const path = require('path');
+const compression = require('compression');
 
+app.use(compression());
+  
 require('dotenv').config();
 if (!process.env.JWT_SECRET) {
   console.warn('⚠️ WARNING: JWT_SECRET is not defined in .env. Using default fallback.');
