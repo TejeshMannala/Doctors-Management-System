@@ -44,39 +44,13 @@ const PharmacyLocator = () => {
   const [locationError, setLocationError] = useState('');
   const [hasScanned, setHasScanned] = useState(false);
   const [isSearchingLocation, setIsSearchingLocation] = useState(false);
-  const [doctorLocation, setDoctorLocation] = useState({ latitude: null, longitude: null });
   const [pharmacies, setPharmacies] = useState([]);
-  const [nearbyPharmacies, setNearbyPharmacies] = useState([]);
   const [medicines, setMedicines] = useState([]);
   const [selectedPrescription, setSelectedPrescription] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [searchRadius, setSearchRadius] = useState(5);
   const [availabilityResults, setAvailabilityResults] = useState({});
-  const [showNearbyMap, setShowNearbyMap] = useState(true);
   const [selectedPharmacyId, setSelectedPharmacyId] = useState(null);
 
-  const pharmacyChains = [
-    { name: 'MedPlus', color: '#00A651', icon: '💊' },
-    { name: 'Apollo Pharmacy', color: '#0033A0', icon: '🏥' },
-    { name: 'Wellness Forever', color: '#FF6B35', icon: '🌿' },
-    { name: 'NetMeds', color: '#00BCD4', icon: '💉' },
-    { name: 'PharmEasy', color: '#E91E63', icon: '📦' },
-    { name: '1mg', color: '#4CAF50', icon: '🔬' },
-    { name: 'Local Medical Store', color: '#795548', icon: '🏪' },
-    { name: 'HealthFirst Pharmacy', color: '#2563EB', icon: '🧴' },
-    { name: 'CarePlus Pharmacy', color: '#7C3AED', icon: '🩺' },
-    { name: 'SafeMeds', color: '#F59E0B', icon: '💠' },
-    { name: 'TrustCare Pharmacy', color: '#0F766E', icon: '🛡️' },
-    { name: 'GreenLeaf Pharmacy', color: '#15803D', icon: '🍃' },
-    { name: 'UrbanHealth Pharmacy', color: '#DB2777', icon: '🏬' },
-    { name: 'CityCare Pharmacy', color: '#047857', icon: '🏥' },
-    { name: 'MegaMed Pharmacy', color: '#0EA5E9', icon: '🩹' },
-    { name: 'Village Pharmacy', color: '#92400E', icon: '🏡' },
-    { name: 'BrightMeds', color: '#F97316', icon: '✨' },
-    { name: 'Family Pharmacy', color: '#831843', icon: '👪' },
-    { name: 'Tesuko Pharmacy', color: '#0F172A', icon: '🛒' },
-    { name: 'Konuko Pharmacy', color: '#0EA5E9', icon: '🧾' },
-  ];
 
   const calculateDistance = (lat1, lon1, lat2, lon2) => {
     const R = 6371;
@@ -110,12 +84,6 @@ const PharmacyLocator = () => {
       });
       const prescriptionsList = Array.isArray(response.data) ? response.data : (response.data.prescriptions || []);
       setMedicines(prescriptionsList);
-      if (prescriptionsList.length > 0 && prescriptionsList[0].doctorId?.userId?.address) {
-        setDoctorLocation({
-          latitude: 17.3850 + (Math.random() - 0.5) * 0.02,
-          longitude: 78.4867 + (Math.random() - 0.5) * 0.02
-        });
-      }
     } catch (err) {
       console.error('Error fetching prescriptions:', err);
     } finally {
@@ -178,90 +146,81 @@ const PharmacyLocator = () => {
 
   const findNearbyPharmacies = async (lat, lng) => {
     setIsSearchingLocation(true);
+    setLocationError('');
+    setPharmacies([]);
+    setSelectedPharmacyId(null);
     try {
-      const res = await fetch(`https://overpass-api.de/api/interpreter?data=[out:json];node(around:5000,${lat},${lng})[amenity=pharmacy];out;`);
+      const radiusMeters = 10000;
+      const query = `
+        [out:json][timeout:25];
+        (
+          node(around:${radiusMeters},${lat},${lng})["amenity"="pharmacy"];
+          way(around:${radiusMeters},${lat},${lng})["amenity"="pharmacy"];
+          relation(around:${radiusMeters},${lat},${lng})["amenity"="pharmacy"];
+        );
+        out center tags 30;
+      `;
+      const res = await fetch(`https://overpass-api.de/api/interpreter?data=${encodeURIComponent(query)}`);
+      if (!res.ok) {
+        throw new Error(`Overpass request failed with ${res.status}`);
+      }
       const data = await res.json();
       
       let realPharmacies = [];
       if (data && data.elements && data.elements.length > 0) {
-        realPharmacies = data.elements.slice(0, 20).map((node, index) => {
-          const trustScore = Math.floor(78 + Math.random() * 21);
-          const trustStatusKey = trustScore >= 90 ? 'Highly Trusted' : trustScore >= 80 ? 'Trusted' : 'Verified';
+        realPharmacies = data.elements.map((node) => {
+          const nodeLat = node.lat ?? node.center?.lat;
+          const nodeLon = node.lon ?? node.center?.lon;
+          if (!nodeLat || !nodeLon) return null;
+          const addressParts = [
+            node.tags?.['addr:housenumber'],
+            node.tags?.['addr:street'],
+            node.tags?.['addr:suburb'],
+            node.tags?.['addr:city']
+          ].filter(Boolean);
           
           return {
-            id: node.id,
+            id: `${node.type}-${node.id}`,
             name: node.tags?.name || t('Local Pharmacy'),
             icon: '🏪',
             color: '#00A651',
-            address: node.tags?.['addr:street'] ? `${node.tags?.['addr:housenumber'] || ''} ${node.tags?.['addr:street']}`.trim() : t('City Center'),
-            distance: calculateDistance(lat, lng, node.lat, node.lon).toFixed(1),
-            phone: node.tags?.phone || `+91 ${Math.floor(Math.random() * 9000000000) + 1000000000}`,
-            openingHours: node.tags?.opening_hours || t('8:00 AM - 10:00 PM'),
-            rating: (3.5 + Math.random() * 1.5).toFixed(1),
-            ownerName: t('Verified Owner'),
-            foundedYear: 2000 + (index % 20),
-            trustScore,
-            trustStatus: t(trustStatusKey),
-            verified: trustScore >= 80,
-            licenseId: `PH-${node.id}`,
-            latitude: node.lat,
-            longitude: node.lon,
-            services: [t('Home Delivery'), t('Online Orders')]
+            address: addressParts.length > 0 ? addressParts.join(', ') : t('Address available in map'),
+            distance: calculateDistance(lat, lng, nodeLat, nodeLon).toFixed(1),
+            phone: node.tags?.phone || node.tags?.['contact:phone'] || '',
+            openingHours: node.tags?.opening_hours || t('Hours not listed'),
+            rating: t('Live map data'),
+            ownerName: node.tags?.operator || t('Not listed'),
+            foundedYear: '',
+            trustScore: null,
+            trustStatus: t('OpenStreetMap'),
+            verified: true,
+            licenseId: `OSM-${node.id}`,
+            latitude: nodeLat,
+            longitude: nodeLon,
+            services: [t('Pharmacy')]
           };
-        }).sort((a, b) => parseFloat(a.distance) - parseFloat(b.distance));
+        }).filter(Boolean).sort((a, b) => parseFloat(a.distance) - parseFloat(b.distance)).slice(0, 30);
       } else {
-        // Fallback
-        realPharmacies = generateMockPharmacies(lat, lng);
+        realPharmacies = [];
       }
       
       setPharmacies(realPharmacies);
+      if (realPharmacies.length === 0) {
+        setLocationError(t('No live pharmacies found near this location. Try another nearby area.'));
+      }
       if (selectedPrescription) {
         checkNearbyPharmacyAvailability(realPharmacies);
       }
     } catch (err) {
       console.error("Error fetching pharmacies from Overpass:", err);
-      // Fallback
-      const mocks = generateMockPharmacies(lat, lng);
-      setPharmacies(mocks);
-      if (selectedPrescription) {
-        checkNearbyPharmacyAvailability(mocks);
-      }
+      setLocationError(t('Unable to load live pharmacy data right now. Please try again.'));
+      setPharmacies([]);
     } finally {
       setIsSearchingLocation(false);
       setLoading(false);
     }
   };
 
-  const generateMockPharmacies = (lat, lng) => {
-    return pharmacyChains.map((chain, index) => {
-      const offsetLat = (Math.random() - 0.5) * 0.05;
-      const offsetLng = (Math.random() - 0.5) * 0.05;
-      const distance = (Math.random() * searchRadius).toFixed(1);
-      const trustScore = Math.floor(78 + Math.random() * 21);
-      const trustStatusKey = trustScore >= 90 ? 'Highly Trusted' : trustScore >= 80 ? 'Trusted' : 'Verified';
-      
-      return {
-        id: index + 1,
-        name: chain.name,
-        icon: chain.icon,
-        color: chain.color,
-        address: `${Math.floor(Math.random() * 200) + 1}, Main Road, City Center`,
-        distance: distance,
-        phone: `+91 ${Math.floor(Math.random() * 9000000000) + 1000000000}`,
-        openingHours: index < 3 ? t('24/7') : t('8:00 AM - 10:00 PM'),
-        rating: (3.5 + Math.random() * 1.5).toFixed(1),
-        ownerName: ['Ramesh Kumar', 'Priya Singh', 'Asha Patel'][index % 3],
-        foundedYear: 1995 + (index % 15),
-        trustScore,
-        trustStatus: t(trustStatusKey),
-        verified: trustScore >= 80,
-        licenseId: `PH-${Math.floor(100000 + Math.random() * 900000)}`,
-        latitude: lat + offsetLat,
-        longitude: lng + offsetLng,
-        services: [t('Home Delivery'), t('Online Orders')]
-      };
-    }).sort((a, b) => parseFloat(a.distance) - parseFloat(b.distance));
-  };
 
   const checkMedicineAvailability = (prescription) => {
     setSelectedPrescription(prescription);
@@ -281,17 +240,16 @@ const PharmacyLocator = () => {
     for (const pharmacy of nearbyPharmaciesList) {
       const medicineAvailability = activePrescription.medicines?.map(medicine => ({
         name: medicine.name,
-        available: Math.random() > 0.3,
-        price: Math.floor(Math.random() * 500) + 50,
+        available: null,
+        price: null,
       })) || [];
-      const someAvailable = medicineAvailability.some(m => m.available);
       results[pharmacy.id] = {
         pharmacy,
         medicines: medicineAvailability,
-        allAvailable: medicineAvailability.every(m => m.available),
-        someAvailable,
-        noneAvailable: !someAvailable,
-        estimatedTotal: medicineAvailability.filter(m => m.available).reduce((sum, m) => sum + m.price, 0)
+        allAvailable: false,
+        someAvailable: true,
+        noneAvailable: false,
+        estimatedTotal: null
       };
     }
     setAvailabilityResults(results);
@@ -448,8 +406,8 @@ const PharmacyLocator = () => {
             </motion.div>
           ))}
           {medicines.length === 0 && (
-             <div className="bg-white/80 border border-dashed border-slate-300 rounded-[24px] p-8 text-center cursor-pointer hover:bg-white transition-colors" onClick={() => setMedicines([{ _id: 'sample', issuedAt: new Date().toISOString(), doctorId: { userId: { fullName: t('Sample Doctor') } }, medicines: [{ name: t('Sample Medicine') }] }])}>
-                <p className="text-slate-500">{t('No prescriptions? Click to load sample data.')}</p>
+             <div className="bg-white/80 border border-dashed border-slate-300 rounded-[24px] p-8 text-center">
+                <p className="text-slate-500">{t('No prescriptions found. You can still search live nearby pharmacies using your location.')}</p>
              </div>
           )}
         </div>
@@ -492,8 +450,7 @@ const PharmacyLocator = () => {
                     <Popup>
                       <div className="text-center">
                         <strong>{pharmacy.name}</strong><br/>
-                        {pharmacy.distance} km away<br/>
-                        {pharmacy.rating} ⭐
+                        {pharmacy.distance} km away
                       </div>
                     </Popup>
                   </Marker>
@@ -505,9 +462,7 @@ const PharmacyLocator = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-10 items-start">
             <AnimatePresence mode='popLayout'>
               {(() => {
-              const allItems = selectedPrescription 
-                ? Object.values(availabilityResults).filter(item => item.someAvailable) 
-                : pharmacies.map(p => ({ pharmacy: p }));
+              const allItems = pharmacies.map(p => availabilityResults[p.id] || { pharmacy: p });
               
               const filteredItems = selectedPharmacyId 
                 ? allItems.filter(item => item.pharmacy.id === selectedPharmacyId)
@@ -547,16 +502,16 @@ const PharmacyLocator = () => {
                         <p className="text-xs md:text-sm text-slate-500 leading-relaxed truncate">{item.pharmacy.address}</p>
                       </div>
                     </div>
-                    {selectedPrescription && (
-                      <div className={`px-4 py-2 rounded-xl text-[10px] font-bold uppercase ${item.allAvailable ? 'bg-green-100 text-green-700' : item.someAvailable ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-700'}`}>
-                        {item.allAvailable ? t('Available') : item.someAvailable ? t('Partial') : t('Out')}
+                    {selectedPrescription && item.medicines && (
+                      <div className="px-4 py-2 rounded-xl text-[10px] font-bold uppercase bg-blue-100 text-blue-700">
+                        {t('Call to verify')}
                       </div>
                     )}
                   </div>
 
                   <div className="px-6 md:px-8 pb-6 md:pb-8 flex flex-wrap gap-2 md:gap-4">
                     <div className="text-[10px] md:text-sm text-slate-600 font-bold flex items-center gap-1.5 bg-white/50 px-3 py-2 rounded-xl border border-white/50"><span>📏</span> {item.pharmacy.distance} km</div>
-                    <div className="text-[10px] md:text-sm text-slate-600 font-bold flex items-center gap-1.5 bg-white/50 px-3 py-2 rounded-xl border border-white/50"><span>⭐</span> {item.pharmacy.rating}</div>
+                    <div className="text-[10px] md:text-sm text-slate-600 font-bold flex items-center gap-1.5 bg-white/50 px-3 py-2 rounded-xl border border-white/50"><span>OSM</span> {item.pharmacy.rating}</div>
                     <div className="text-[10px] md:text-sm text-slate-600 font-bold flex items-center gap-1.5 bg-white/50 px-3 py-2 rounded-xl border border-white/50"><span>🕒</span> {item.pharmacy.openingHours}</div>
                   </div>
 
@@ -587,7 +542,7 @@ const PharmacyLocator = () => {
                         <div className="mb-6">
                           <h4 className="text-[0.8rem] font-extrabold uppercase text-slate-500 mb-3 tracking-wider">{t('Pharmacy Info')}</h4>
                           <div className="flex justify-between py-2 border-b border-slate-50"><span className="text-slate-500">{t('Owner')}</span><span className="font-bold">{item.pharmacy.ownerName}</span></div>
-                          <div className="flex justify-between py-2 border-b border-slate-50"><span className="text-slate-500">{t('Contact')}</span><span className="font-bold">{item.pharmacy.phone}</span></div>
+                          <div className="flex justify-between py-2 border-b border-slate-50"><span className="text-slate-500">{t('Contact')}</span><span className="font-bold">{item.pharmacy.phone || t('Not listed')}</span></div>
                           <div className="flex justify-between py-2 border-b border-slate-50"><span className="text-slate-500">{t('License')}</span><span className="font-bold">{item.pharmacy.licenseId}</span></div>
                         </div>
                         
@@ -596,15 +551,15 @@ const PharmacyLocator = () => {
                             <h4 className="text-[0.8rem] font-extrabold uppercase text-slate-500 mb-3 tracking-wider">{t('Medicine Availability')}</h4>
                             <div className="flex flex-col gap-2 mb-4">
                               {item.medicines.map((m, i) => (
-                                <div key={i} className={`flex justify-between p-3 bg-slate-50 rounded-xl text-sm border-l-4 ${m.available ? 'border-green-500' : 'border-red-500 opacity-60'}`}>
-                                  <span className="font-medium">{m.available ? '✅' : '❌'} {m.name}</span>
-                                  {m.available && <b className="text-primary-600">₹{m.price}</b>}
+                                <div key={i} className="flex justify-between p-3 bg-slate-50 rounded-xl text-sm border-l-4 border-blue-500">
+                                  <span className="font-medium">{m.name}</span>
+                                  <b className="text-primary-600">{t('Call to verify')}</b>
                                 </div>
                               ))}
                             </div>
                             <div className="p-4 bg-primary-50 rounded-2xl flex justify-between items-center">
-                              <span className="font-bold text-slate-600">{t('Estimated Total')}</span>
-                              <b className="text-xl text-primary-600">₹{item.estimatedTotal}</b>
+                              <span className="font-bold text-slate-600">{t('Live stock')}</span>
+                              <b className="text-sm text-primary-600">{t('Not provided by map data')}</b>
                             </div>
                           </div>
                         )}
@@ -633,3 +588,4 @@ const PharmacyLocator = () => {
 };
 
 export default PharmacyLocator;
+

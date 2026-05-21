@@ -44,12 +44,19 @@ const AmbulanceService = () => {
   const [dispatchDetails, setDispatchDetails] = useState({ location: '', phone: '' });
   const [locationError, setLocationError] = useState('');
 
-  const mockAmbulances = [
-    { id: 1, driver: 'Raju Sharma', distance: '1.2 km', eta: '4 mins', status: 'Available', type: 'Advanced Life Support (ALS)', reg: 'TS 09 EU 4532' },
-    { id: 2, driver: 'Manoj Kumar', distance: '2.5 km', eta: '8 mins', status: 'Available', type: 'Basic Life Support (BLS)', reg: 'TS 08 BC 9912' },
-    { id: 3, driver: 'Srinivas Rao', distance: '0.8 km', eta: '3 mins', status: 'On Route to Patient', type: 'Advanced Life Support (ALS)', reg: 'TS 07 TR 1122' },
-    { id: 4, driver: 'Ali Khan', distance: '4.1 km', eta: '12 mins', status: 'Available', type: 'Patient Transport (PTS)', reg: 'TS 10 MN 8821' },
-  ];
+  const calculateDistance = (lat1, lon1, lat2, lon2) => {
+    const R = 6371;
+    const dLat = ((lat2 - lat1) * Math.PI) / 180;
+    const dLon = ((lon2 - lon1) * Math.PI) / 180;
+    const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos((lat1 * Math.PI) / 180) * Math.cos((lat2 * Math.PI) / 180) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+  };
+
+  const estimateEta = (distanceKm) => {
+    const minutes = Math.max(3, Math.round((distanceKm / 35) * 60));
+    return `${minutes} mins`;
+  };
 
   const handleSearch = async (e) => {
     e?.preventDefault();
@@ -70,7 +77,7 @@ const AmbulanceService = () => {
         const lat = parseFloat(data[0].lat);
         const lon = parseFloat(data[0].lon);
         setMapCenter([lat, lon]);
-        generateAmbulances(lat, lon);
+        findNearbyAmbulances(lat, lon);
       } else {
         setLocationError('City not found. Please enter a valid city name.');
         setIsSearching(false);
@@ -82,22 +89,63 @@ const AmbulanceService = () => {
     }
   };
 
-  const generateAmbulances = (lat, lon) => {
-    const generatedAmbulances = mockAmbulances.map((amb, index) => {
-      const offsetLat = (Math.random() - 0.5) * 0.05;
-      const offsetLon = (Math.random() - 0.5) * 0.05;
-      return {
-        ...amb,
-        lat: lat + offsetLat,
-        lng: lon + offsetLon,
-        distance: (Math.random() * 5).toFixed(1) + ' km'
-      };
-    }).sort((a, b) => parseFloat(a.distance) - parseFloat(b.distance));
-    
-    setTimeout(() => {
-      setAmbulances(generatedAmbulances);
+  const findNearbyAmbulances = async (lat, lon) => {
+    setIsSearching(true);
+    setAmbulances([]);
+    setSelectedAmbulance(null);
+    setLocationError('');
+
+    try {
+      const radiusMeters = 15000;
+      const query = `
+        [out:json][timeout:25];
+        (
+          node(around:${radiusMeters},${lat},${lon})["emergency"="ambulance_station"];
+          way(around:${radiusMeters},${lat},${lon})["emergency"="ambulance_station"];
+          relation(around:${radiusMeters},${lat},${lon})["emergency"="ambulance_station"];
+          node(around:${radiusMeters},${lat},${lon})["healthcare"="ambulance_station"];
+          way(around:${radiusMeters},${lat},${lon})["healthcare"="ambulance_station"];
+          relation(around:${radiusMeters},${lat},${lon})["healthcare"="ambulance_station"];
+        );
+        out center tags 25;
+      `;
+      const res = await fetch(`https://overpass-api.de/api/interpreter?data=${encodeURIComponent(query)}`);
+      if (!res.ok) {
+        throw new Error(`Overpass request failed with ${res.status}`);
+      }
+      const data = await res.json();
+      const liveAmbulances = (data.elements || []).map((item) => {
+        const itemLat = item.lat ?? item.center?.lat;
+        const itemLon = item.lon ?? item.center?.lon;
+        if (!itemLat || !itemLon) return null;
+        const distanceKm = calculateDistance(lat, lon, itemLat, itemLon);
+        const phone = item.tags?.phone || item.tags?.['contact:phone'] || item.tags?.emergency_phone || '';
+
+        return {
+          id: `${item.type}-${item.id}`,
+          driver: item.tags?.operator || item.tags?.name || 'Ambulance service',
+          distance: `${distanceKm.toFixed(1)} km`,
+          eta: estimateEta(distanceKm),
+          status: 'Available',
+          type: item.tags?.name || 'Ambulance Station',
+          reg: phone || `OSM-${item.id}`,
+          phone,
+          lat: itemLat,
+          lng: itemLon,
+        };
+      }).filter(Boolean).sort((a, b) => parseFloat(a.distance) - parseFloat(b.distance));
+
+      setAmbulances(liveAmbulances);
+      if (liveAmbulances.length === 0) {
+        setLocationError(t('No live ambulance stations found near this location. Try a nearby city or call local emergency services.'));
+      }
+    } catch (error) {
+      console.error('Error fetching ambulance services from Overpass:', error);
+      setLocationError(t('Unable to load live ambulance data right now. Please try again.'));
+      setAmbulances([]);
+    } finally {
       setIsSearching(false);
-    }, 1500);
+    }
   };
 
   const getCurrentLocation = () => {
@@ -111,7 +159,7 @@ const AmbulanceService = () => {
           const lon = position.coords.longitude;
           setMapCenter([lat, lon]);
           setHasScanned(true);
-          generateAmbulances(lat, lon);
+          findNearbyAmbulances(lat, lon);
         },
         () => {
           setLocationError(t('Location access denied. Please enter your city manually.'));
@@ -131,6 +179,14 @@ const AmbulanceService = () => {
     setTimeout(() => {
       setDispatchModal(prev => ({ ...prev, status: 'success' }));
     }, 2000);
+  };
+
+  const contactAmbulance = (ambulance) => {
+    if (ambulance.phone) {
+      window.location.href = `tel:${ambulance.phone}`;
+      return;
+    }
+    window.open(`https://www.google.com/maps/dir/${mapCenter[0]},${mapCenter[1]}/${ambulance.lat},${ambulance.lng}`, '_blank');
   };
 
   return (
@@ -178,7 +234,7 @@ const AmbulanceService = () => {
                           <div className="text-center">
                             <strong>{amb.type}</strong><br/>
                             {amb.eta} away<br/>
-                            Driver: {amb.driver}
+                            Provider: {amb.driver}
                           </div>
                         </Popup>
                       </Marker>
@@ -285,8 +341,8 @@ const AmbulanceService = () => {
                   </div>
                   <div className="flex justify-between items-end text-sm text-slate-500">
                     <div>
-                      <p>👨‍✈️ {amb.driver}</p>
-                      <p className="text-xs mt-1">🔢 {amb.reg}</p>
+                      <p>{amb.driver}</p>
+                      <p className="text-xs mt-1">{amb.phone ? amb.phone : amb.reg}</p>
                     </div>
                     <div className="text-right">
                       <p className="font-black text-slate-800 text-lg">{amb.eta}</p>
@@ -301,10 +357,10 @@ const AmbulanceService = () => {
                <motion.button 
                  initial={{ opacity: 0, y: 20 }} 
                  animate={{ opacity: 1, y: 0 }}
-                 onClick={() => setDispatchModal({ isOpen: true, status: 'idle' })}
+                 onClick={() => contactAmbulance(selectedAmbulance)}
                  className="mt-4 w-full py-4 bg-red-600 text-white font-black rounded-2xl shadow-lg hover:bg-red-700 active:scale-95 transition-all"
                >
-                 {t('Book Ambulance Now')}
+                 {selectedAmbulance.phone ? t('Call Ambulance Service') : t('Get Directions')}
                </motion.button>
             )}
           </div>
